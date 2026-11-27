@@ -32,7 +32,12 @@ want. Answer in the language they use.
    - Never read, copy, store, proxy or refresh its OAuth tokens or credential files
      (`~/.claude*`, `~/.codex*`, Antigravity/Gemini dirs, keychain entries); never
      inject tokens via env. The vendor CLI logs in by itself.
-   - Locate binaries on PATH; if missing, show the official install link; never auto-install.
+   - Only interactive arguments: `--model <id>`, the vendor's continue-last-conversation flag,
+     and its own sign-in subcommand (`codex login`). Model ids are validated (no leading dash,
+     no shell metacharacters).
+   - Locate binaries on PATH (or the official installer's default folder). Installing happens
+     only when the user picks "Install" and confirms; it runs the vendor's official one-line
+     installer visibly in the terminal (owner-approved, Nov 2026). Never install silently.
    - First-run notice: subscription terms are set by each vendor and can change.
 5. Ask before adding dependencies with restrictive licenses. Prefer boring, maintained deps.
 6. Ask before credential-related changes or any change to the rules above.
@@ -45,9 +50,15 @@ want. Answer in the language they use.
 - Branch **`main`**: a fork of **sst/opencode** (MIT, Bun + TypeScript, OpenTUI + Solid).
   It is based on upstream commit `b7a7135` (remote `upstream` → `https://github.com/sst/opencode.git`,
   branch `dev`, fetched with `--depth 1`).
-- **All k1rothic work on `main` is uncommitted** (about 120 changed/new files). The
-  owner has not yet asked for a commit. Every change is marked with a `k1rothic:`
-  comment in the code; `grep -rn "k1rothic:" packages` finds them.
+- `main` is pushed to `origin` (github.com/k1rothic/k1rothic-cli). Because the local clone
+  was shallow, `main` starts with a root commit holding the exact tree of upstream `b7a7135`
+  (no upstream history). The first upstream merge needs `git fetch upstream dev` and
+  `git merge --allow-unrelated-histories upstream/dev` once. Every change is marked with a
+  `k1rothic:` comment in the code; `grep -rn "k1rothic:" packages` finds them.
+- The pre-push hook runs `bun run check`, which fails on upstream's `check-greys`
+  (colors in `services/site`, not k1rothic code); push with `--no-verify` until that is fixed.
+- Model presets for the vendor CLIs in `tui/src/official.ts` (Nov 2026 names) go stale;
+  "Default model" and "Custom model…" always work.
 
 ## Environment notes (owner's Windows machine)
 
@@ -93,7 +104,7 @@ cd packages/cli && bun run script/build.ts --single --skip-web-ui --skip-install
 | Keys | OS keychain via `Bun.secrets` (service `k1rothic`, chunked for Windows' 2.5 KB limit); DB rows redacted; old plaintext rows migrated on read | `core/src/credential/vault.ts`, `core/src/credential.ts` |
 | Removed | ChatGPT/Codex, Copilot, opencode Console/Zen, Claude Agent bridge, SuperGrok/Poe logins; update feed; models.dev fetch (bundled snapshot; opt in with `K1ROTHIC_MODELS_FETCH=1`); `/pair`, push relays; opencode MCP client metadata doc | `core/src/plugin/provider.ts`, `plugin/provider/{openai,xai,poe}.ts`, `cli/src/services/updater.ts`, `cli/src/server-process.ts`, `core/src/push/list.ts`, `core/src/mcp/oauth.ts`, `cli/src/commands/handlers/pair.ts` |
 | Vendor files | `~/.claude` (CLAUDE.md, skills) not read; Claude Code IDE lock files (`~/.claude/ide`, contain a token) not read | `core/src/config/discovery.ts`, `core/src/config/plugin/instruction.ts`, `tui/src/editor.ts` |
-| Mode B | `/official`: claude/codex/agy on PATH, install link if missing, one-time terms notice, suspend TUI → spawn with inherited stdio, no args, no added env | `tui/src/official.ts`, `tui/src/component/dialog-official.tsx` |
+| Mode B | claude/codex/agy in `/provider`, the model picker and `/official`: install (confirmed official installer), sign in, start on a model (`--model`), new or continued conversation; terms notice; prompt-cache warning when continuing on another model; suspend TUI → spawn with inherited stdio, no added env | `tui/src/official.ts`, `tui/src/component/dialog-official.tsx`, `component/dialog-integration.tsx`, `component/dialog-model.tsx` |
 | Session UI | Top bar (cwd · context meter `██░░ 22.5%  113K / 500K`); user message as shaded block `❯ text  8:19 AM`; `◆ Thought for 2.0s`; status row `⠋ Responding… 15s … 17s ↓9.45k [stop]`; rounded input box with `model (effort) · agent · ask/auto-approve` in the bottom border (lighter `titleColor`); footer `Shift+Tab:mode │ Esc:cancel │ Ctrl+P:commands` | `tui/src/component/k1-chrome.tsx`, `component/prompt/index.tsx`, `feature-plugins/prompt/footer.tsx`, `routes/session/{index,group-view,message-parts}.tsx`, `util/session.ts` |
 | Session tabs | Hidden by default; `alt+t` or `/tabs` toggles them | `tui/src/app.tsx`, `tui/src/config/keybind.ts` |
 | `/provider` | `/connect` renamed (alias kept); only anthropic, openai, openrouter, google, xai, deepseek, mistral, groq, ollama, lmstudio + user's custom providers (a user `enabled_providers`/`provider.use` policy replaces the list) | `core/src/k1rothic-providers.ts`, `core/src/config/plugin/policy.ts`, `server/src/handlers/integration.ts`, `tui/src/component/dialog-integration.tsx` |

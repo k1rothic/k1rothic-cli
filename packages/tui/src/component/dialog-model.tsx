@@ -13,14 +13,26 @@ import { useLocation } from "../context/location"
 import { useNewDesigns } from "../config"
 import { DialogFreeModels } from "./dialog-model-free"
 import { FavoriteMarker, isFreeModel, prioritizeFavorites, sortModelOptions } from "./model-options"
+import { useOfficialModelOptions } from "./dialog-official"
+import { useRoute } from "../context/route"
+import { useToast } from "../ui/toast"
+import { cacheNotice } from "../official"
 
 export function DialogModel(props: { integrationID?: string }) {
   const local = useLocal()
   const dialog = useDialog()
   const newDesigns = useNewDesigns()
   const connected = useConnected()
+  const route = useRoute()
+  const data = useData()
+  const toast = useToast()
 
   function select(providerID: string, modelID: string) {
+    // k1rothic: a different model mid-conversation starts with a cold prompt cache.
+    const before = local.model.standard()
+    const conversation = route.data.type === "session" && data.session.message.list(route.data.sessionID).length > 0
+    if (conversation && before && (before.providerID !== providerID || before.modelID !== modelID))
+      toast.show({ variant: "warning", title: "Model changed mid-conversation", message: cacheNotice, duration: 8000 })
     local.model.set({ providerID, modelID }, { recent: true })
     const list = local.model.variant.list()
     const cur = local.model.variant.current()
@@ -128,7 +140,16 @@ function DialogConnectedModels(props: {
     ),
   )
 
-  const options = createMemo(() => {
+  // k1rothic Mode B: models of the official subscription CLIs; picking one starts that CLI.
+  const officialOptions = useOfficialModelOptions(location.ref?.directory)
+
+  const officialSearch = createMemo(() => {
+    const needle = query().trim()
+    if (!needle) return officialOptions()
+    return fuzzysort.go(needle, officialOptions(), { keys: ["title", "category"] }).map((item) => item.obj)
+  })
+
+  const k1rothicModelOptions = createMemo(() => {
     const needle = query().trim()
     if (needle)
       return prioritizeFavorites(
@@ -194,6 +215,8 @@ function DialogConnectedModels(props: {
       ...listed.filter((option) => option.category === "Free"),
     ]
   })
+
+  const options = createMemo(() => [...k1rothicModelOptions(), ...(props.integrationID ? [] : officialSearch())])
 
   const title = createMemo(
     () =>

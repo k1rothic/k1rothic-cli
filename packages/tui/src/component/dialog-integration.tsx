@@ -32,6 +32,7 @@ import {
   useDialog,
 } from "../ui/dialog"
 import { DialogGatewayName, DialogGateways } from "./dialog-gateway"
+import { useOfficialProviderOptions } from "./dialog-official"
 import { listGateways } from "@opencode/core/k1rothic-gateways"
 import { Global } from "@opencode/util/global"
 import { DialogPrompt } from "../ui/dialog-prompt"
@@ -128,6 +129,7 @@ export function DialogIntegration(
   // k1rothic: the user's custom gateways (custom providers in the global config).
   const [gatewayIDs, setGatewayIDs] = createSignal<ReadonlySet<string>>(new Set())
   void listGateways(Global.Path.config).then((list) => setGatewayIDs(new Set(list.map((item) => item.id))))
+  const officialOptions = useOfficialProviderOptions(location.directory)
 
   createEffect(() => {
     if (!props.autoConnect) return
@@ -167,9 +169,11 @@ export function DialogIntegration(
       }
     })
     if (props.integrationID !== undefined) return listed
-    // k1rothic: add / manage custom API gateways.
+    // k1rothic: official subscription CLIs (Mode B), then add / manage custom API gateways.
     return [
-      ...listed.toSorted((a, b) => Number(a.category === "Custom gateways") - Number(b.category === "Custom gateways")),
+      ...listed.filter((option) => option.category !== "Custom gateways"),
+      ...officialOptions(),
+      ...listed.filter((option) => option.category === "Custom gateways"),
       {
         title: "+ Add custom gateway",
         value: "k1rothic.gateway.add",

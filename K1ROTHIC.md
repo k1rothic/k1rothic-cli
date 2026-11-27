@@ -16,8 +16,10 @@ The Go prototype that came before this fork is on the `go-prototype` branch.
   only metadata and a blanked copy.
 - **Mode A uses your own API keys.** Vendor subscription logins (ChatGPT/Codex,
   GitHub Copilot, SuperGrok, Poe) are disabled.
-- **Mode B (`/official`) only starts the official CLI.** It never reads, copies,
-  proxies or refreshes vendor tokens or credential files.
+- **Mode B (`/official`) only starts the official CLI**, interactively (never
+  `-p`/`exec`/`--json`); the only arguments are `--model`, continue-last-conversation
+  and the CLI's own sign-in command. It never reads, copies, proxies or refreshes
+  vendor tokens or credential files.
 
 ## Changes from opencode
 
@@ -38,7 +40,8 @@ The Go prototype that came before this fork is on the `go-prototype` branch.
 | Provider list | Default allowlist: anthropic, openai, openrouter, google, xai, deepseek, mistral, groq, ollama, lmstudio + the user's custom providers; a user `enabled_providers` / `provider.use` policy replaces it | `core/src/k1rothic-providers.ts`, `core/src/config/plugin/policy.ts`, `server/src/handlers/integration.ts` |
 | Custom gateways | `/provider` → "+ Add custom gateway": name → API format (OpenAI-compatible, OpenAI Responses, Anthropic-compatible) → base URL → key (OS keychain) → models (typed or loaded from `/models`); saved as a custom provider in the global `k1rothic.jsonc`; "Edit or delete gateways" | `core/src/k1rothic-gateways.ts`, `tui/src/component/dialog-gateway.tsx` |
 | Session UI | Top bar (working directory · context meter `██░░ 22.5%  113K / 500K`); user message as a shaded block `❯ text` with the time; `◆ Thought for 2.0s`; status row `⠋ Responding… 15s … 17s ↓9.45k [stop]` above the input; rounded input box with `model (effort) · agent · ask/auto-approve` in its bottom border; footer `Shift+Tab:mode │ Esc:cancel │ Ctrl+P:commands`; session tab row hidden until `alt+t` or `/tabs`; model label drawn lighter (`titleColor`) | `tui/src/component/k1-chrome.tsx`, `component/prompt/index.tsx`, `feature-plugins/prompt/footer.tsx`, `routes/session/{index,group-view,message-parts}.tsx`, `app.tsx`, `util/session.ts` |
-| Mode B | `/official` lists claude / codex / agy, finds them on PATH, shows the official install link if missing, shows a one-time subscription-terms notice, then suspends the TUI and runs the CLI with inherited stdio, no arguments and no added env | `tui/src/official.ts`, `tui/src/component/dialog-official.tsx` |
+| Mode B | Claude Code / Codex / Antigravity appear in `/provider` ("Subscriptions (official CLIs)"), in the model picker, and in `/official`. Per CLI: **Install** (runs the vendor's official one-line installer visibly, only after confirmation), **Sign in** (the CLI's own login: `codex login`, otherwise the CLI asks on start), **Start with model** (preset, default or custom id → `--model <id>`), then new conversation or continue the last one (`--continue` / `resume --last`). One-time subscription-terms notice; continuing on a different model than last time warns that the prompt cache is lost. The TUI suspends and the CLI runs with inherited stdio and no added env | `tui/src/official.ts`, `tui/src/component/dialog-official.tsx`, `component/dialog-integration.tsx`, `component/dialog-model.tsx` |
+| Cache warning | Switching the k1rothic model in a session that already has messages shows a toast: the provider's prompt cache doesn't carry over to another model | `tui/src/component/dialog-model.tsx` |
 
 ## Build and run
 
