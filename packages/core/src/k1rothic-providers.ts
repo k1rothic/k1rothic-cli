@@ -4,6 +4,9 @@
 // provider/gateway under `providers` in their config.
 export const DEFAULT_PROVIDERS: ReadonlySet<string> = new Set([
   "anthropic",
+  "claude-agent", // the user's signed-in Claude Code CLI, run in the background
+  "antigravity-agent", // the user's signed-in `agy`, through its ACP server
+  "codex-agent", // the user's signed-in `codex`, through the codex-acp adapter
   "openai",
   "openrouter",
   "google", // Gemini API

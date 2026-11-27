@@ -13,6 +13,7 @@ dist
 dist-node
 dist-ui
 dist-next
+dist-[0-9]*
 ts-dist
 .turbo
 .typecheck-profiles

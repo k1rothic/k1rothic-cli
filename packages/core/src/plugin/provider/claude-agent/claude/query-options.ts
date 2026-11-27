@@ -24,8 +24,9 @@ const ISOLATION_ENV = {
   // OpenCode changes the system prompt and tools mid-session (agent switches, instruction edits). Without this,
   // Claude Code replays thinking bound to the old prompt and the API rejects the request.
   CLAUDE_CODE_POLISHED_DEWDROP: "drop",
-  // The SDK's default `sdk-ts` label uses the 5-hour plan limit about 1.8x faster (anthropics/claude-code#97074)
-  CLAUDE_CODE_ENTRYPOINT: "opencode",
+  // k1rothic: the SDK's own `sdk-ts` label. Anthropic bills the `opencode` label to prepaid API credits rather than the
+  // subscription ("Credit balance is too low" on a Pro/Max login), and k1rothic does not pose as another client.
+  CLAUDE_CODE_ENTRYPOINT: undefined,
   // Skips OAuth, so the subscription would not be used
   CLAUDE_CODE_SIMPLE: undefined,
   // A shell-level effort override would take precedence over OpenCode's live effort settings.
@@ -90,7 +91,9 @@ export function base(input: {
   return {
     pathToClaudeCodeExecutable: input.executable,
     spawnClaudeCodeProcess: input.io.spawn,
-    env: { ...input.io.env(), ...input.connection, ...ISOLATION_ENV },
+    // k1rothic: an ANTHROPIC_API_KEY in the shell (used by the Anthropic API provider) would make Claude Code bill
+    // that key instead of the subscription this provider is for. A key set on the provider itself still applies.
+    env: { ...input.io.env(), ANTHROPIC_API_KEY: undefined, ...input.connection, ...ISOLATION_ENV },
     settingSources: [],
     settings: { disableAllHooks: true },
     // Without summaries, OpenCode has no reasoning text to display

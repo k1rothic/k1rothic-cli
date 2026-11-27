@@ -10,7 +10,6 @@ import { DialogPrompt } from "../ui/dialog-prompt"
 import { useDialog } from "../ui/dialog"
 import { useToast } from "../ui/toast"
 import { useStorage } from "../context/storage"
-import { useTheme } from "../context/theme"
 import {
   cacheNotice,
   install,
@@ -91,7 +90,7 @@ function useOfficial(cwd?: string) {
     signIn(vendor: Vendor) {
       confirmThen(vendor, terms(), () => run(vendor, vendor.signIn))
     },
-    install(vendor: Vendor) {
+    install(vendor: Vendor, onInstalled?: () => void) {
       const command = process.platform === "win32" ? vendor.installer.win32 : vendor.installer.posix
       dialog.replace(() => (
         <DialogConfirm
@@ -107,6 +106,7 @@ function useOfficial(cwd?: string) {
                     message: `${vendor.binary} was not found after the installer ran. Open a new terminal or check ${vendor.install}`,
                   })
                 toast.show({ variant: "success", message: `${vendor.name} installed. Sign in next.` })
+                if (onInstalled) return onInstalled()
                 dialog.replace(() => <DialogOfficialVendor vendor={vendor} cwd={cwd} />)
               })
               .catch((error) =>
@@ -137,7 +137,7 @@ export function DialogOfficial(props: { cwd?: string }) {
 }
 
 /** Install, sign in, or start one vendor CLI on a chosen model. */
-export function DialogOfficialVendor(props: { vendor: Vendor; cwd?: string }) {
+export function DialogOfficialVendor(props: { vendor: Vendor; cwd?: string; onInstalled?: () => void }) {
   const dialog = useDialog()
   const toast = useToast()
   const official = useOfficial(props.cwd)
@@ -155,7 +155,7 @@ export function DialogOfficialVendor(props: { vendor: Vendor; cwd?: string }) {
             value: "install",
             title: `Install ${props.vendor.binary}`,
             description: process.platform === "win32" ? props.vendor.installer.win32 : props.vendor.installer.posix,
-            onSelect: () => official.install(props.vendor),
+            onSelect: () => official.install(props.vendor, props.onInstalled),
           },
           {
             value: "page",
@@ -256,48 +256,4 @@ function DialogOfficialStart(props: { vendor: Vendor; model?: string; cwd?: stri
       ]}
     />
   )
-}
-
-/** Rows for the /provider list: one per vendor CLI. */
-export function useOfficialProviderOptions(cwd?: string) {
-  const dialog = useDialog()
-  const theme = useTheme().surface("dialog")
-  return () =>
-    vendors.map((vendor) => {
-      const installed = locate(vendor) !== undefined
-      return {
-        title: vendor.name,
-        value: `k1rothic.official.${vendor.id}`,
-        description: `${vendor.plan} · official ${vendor.binary} CLI`,
-        footer: installed ? undefined : "Install →",
-        footerColor: undefined,
-        category: OFFICIAL_CATEGORY,
-        disabled: false,
-        gutter: installed ? () => <text fg={theme.text.feedback.success.base}>{sym("✓")}</text> : undefined,
-        onSelect: () => dialog.replace(() => <DialogOfficialVendor vendor={vendor} cwd={cwd} />),
-      }
-    })
-}
-
-/** Rows for the model picker: selecting one starts that CLI on that model. */
-export function useOfficialModelOptions(cwd?: string) {
-  const dialog = useDialog()
-  return () =>
-    vendors.flatMap((vendor) => {
-      const installed = locate(vendor) !== undefined
-      return vendor.models.map((model) => ({
-        value: { providerID: `k1rothic.official.${vendor.id}`, modelID: model.id },
-        title: `${vendor.name} · ${model.title}`,
-        description: installed ? vendor.plan : `${vendor.plan} · not installed`,
-        category: OFFICIAL_CATEGORY,
-        onSelect: () =>
-          dialog.replace(() =>
-            installed ? (
-              <DialogOfficialStart vendor={vendor} model={model.id} cwd={cwd} />
-            ) : (
-              <DialogOfficialVendor vendor={vendor} cwd={cwd} />
-            ),
-          ),
-      }))
-    })
 }

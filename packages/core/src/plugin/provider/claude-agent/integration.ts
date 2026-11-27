@@ -18,7 +18,7 @@ export const register = Effect.fn("ClaudeIntegration.register")(function* (
 ) {
   yield* ctx.integration.transform((editor) => {
     editor.update(ClaudeProvider.ID, (integration) => {
-      integration.name = "Claude Agent"
+      integration.name = "Claude Code (subscription)" // k1rothic: named like the other subscription CLIs
     })
     editor.method.update({
       integrationID: ClaudeProvider.ID,

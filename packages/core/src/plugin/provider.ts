@@ -1,6 +1,8 @@
+import { AntigravityAgentPlugin, CodexAgentPlugin } from "./provider/acp-agent/index.js"
 import { AmazonBedrockPlugin } from "./provider/amazon-bedrock.js"
 import { AzurePlugin } from "./provider/azure.js"
 import { CerebrasPlugin } from "./provider/cerebras.js"
+import { ClaudeAgentPlugin } from "./provider/claude-agent/index.js"
 import { CloudflareAIGatewayPlugin } from "./provider/cloudflare-ai-gateway.js"
 import { CloudflareWorkersAIPlugin } from "./provider/cloudflare-workers-ai.js"
 import { DatabricksPlugin } from "./provider/databricks.js"
@@ -26,13 +28,17 @@ import { XAIPlugin } from "./provider/xai.js"
 import { ZenmuxPlugin } from "./provider/zenmux.js"
 import type { PluginInternal } from "./internal.js"
 
-// k1rothic: removed ChatGPTPlugin (ChatGPT/Codex login), GithubCopilotPlugin (Copilot login),
-// OpencodePlugin (opencode Console/Zen cloud, free models) and ClaudeAgentPlugin (drives the
-// local `claude` CLI). Mode A talks to providers with the user's own API keys only.
+// k1rothic: removed ChatGPTPlugin (ChatGPT/Codex login), GithubCopilotPlugin (Copilot login) and
+// OpencodePlugin (opencode Console/Zen cloud, free models). ClaudeAgentPlugin is back (owner-approved,
+// Nov 2026): it drives the user's own signed-in `claude` CLI in the background and never sees a token.
+// AntigravityAgentPlugin and CodexAgentPlugin do the same for `agy` and `codex` through their ACP servers.
 export const ProviderPlugins: PluginInternal.InternalPlugin[] = [
+  AntigravityAgentPlugin,
+  CodexAgentPlugin,
   AmazonBedrockPlugin,
   AzurePlugin,
   CerebrasPlugin,
+  ClaudeAgentPlugin,
   CloudflareAIGatewayPlugin,
   CloudflareWorkersAIPlugin,
   DatabricksPlugin,

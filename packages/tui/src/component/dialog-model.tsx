@@ -13,7 +13,6 @@ import { useLocation } from "../context/location"
 import { useNewDesigns } from "../config"
 import { DialogFreeModels } from "./dialog-model-free"
 import { FavoriteMarker, isFreeModel, prioritizeFavorites, sortModelOptions } from "./model-options"
-import { useOfficialModelOptions } from "./dialog-official"
 import { useRoute } from "../context/route"
 import { useToast } from "../ui/toast"
 import { cacheNotice } from "../official"
@@ -140,16 +139,7 @@ function DialogConnectedModels(props: {
     ),
   )
 
-  // k1rothic Mode B: models of the official subscription CLIs; picking one starts that CLI.
-  const officialOptions = useOfficialModelOptions(location.ref?.directory)
-
-  const officialSearch = createMemo(() => {
-    const needle = query().trim()
-    if (!needle) return officialOptions()
-    return fuzzysort.go(needle, officialOptions(), { keys: ["title", "category"] }).map((item) => item.obj)
-  })
-
-  const k1rothicModelOptions = createMemo(() => {
+  const options = createMemo(() => {
     const needle = query().trim()
     if (needle)
       return prioritizeFavorites(
@@ -215,8 +205,6 @@ function DialogConnectedModels(props: {
       ...listed.filter((option) => option.category === "Free"),
     ]
   })
-
-  const options = createMemo(() => [...k1rothicModelOptions(), ...(props.integrationID ? [] : officialSearch())])
 
   const title = createMemo(
     () =>

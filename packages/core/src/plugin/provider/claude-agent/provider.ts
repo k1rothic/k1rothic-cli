@@ -56,7 +56,8 @@ export const register = Effect.fn("ClaudeProvider.register")(function* (
     editor.add({
       info: {
         id: ID,
-        name: "Claude Agent",
+        // k1rothic: named like the other subscription CLIs
+        name: "Claude Code (subscription)",
         activation: "auto",
         package: Provider.aisdk(PACKAGE),
       },

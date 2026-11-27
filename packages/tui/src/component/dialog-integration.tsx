@@ -32,7 +32,8 @@ import {
   useDialog,
 } from "../ui/dialog"
 import { DialogGatewayName, DialogGateways } from "./dialog-gateway"
-import { useOfficialProviderOptions } from "./dialog-official"
+import { DialogOfficialVendor, OFFICIAL_CATEGORY } from "./dialog-official"
+import { locate, vendors, type Vendor } from "../official"
 import { listGateways } from "@opencode/core/k1rothic-gateways"
 import { Global } from "@opencode/util/global"
 import { DialogPrompt } from "../ui/dialog-prompt"
@@ -129,7 +130,6 @@ export function DialogIntegration(
   // k1rothic: the user's custom gateways (custom providers in the global config).
   const [gatewayIDs, setGatewayIDs] = createSignal<ReadonlySet<string>>(new Set())
   void listGateways(Global.Path.config).then((list) => setGatewayIDs(new Set(list.map((item) => item.id))))
-  const officialOptions = useOfficialProviderOptions(location.directory)
 
   createEffect(() => {
     if (!props.autoConnect) return
@@ -147,13 +147,19 @@ export function DialogIntegration(
     const listed = integrations().map((integration) => {
       const methods = connectMethods(integration)
       const credentials = credentialConnections(integration)
+      const vendor = vendors.find((item) => item.providerID === integration.id)
       let category = "Providers"
       if (gatewayIDs().has(integration.id)) category = "Custom gateways"
+      if (vendor) category = OFFICIAL_CATEGORY
       const status = integration.connections[0]?.status
       return {
         title: integration.name,
         value: integration.id,
-        description: methods.length === 0 ? "Environment only" : undefined,
+        description: vendor
+          ? `${vendor.plan} · ${vendor.binary} in the background`
+          : methods.length === 0
+            ? "Environment only"
+            : undefined,
         footer: status ? "Sign in required →" : connectionSummary(integration) || undefined,
         footerColor: status ? theme.text.feedback.warning.base : undefined,
         category,
@@ -163,16 +169,18 @@ export function DialogIntegration(
             ? () => <text fg={theme.text.feedback.success.base}>{sym("✓")}</text>
             : undefined,
         onSelect: () => {
+          if (vendor)
+            return subscriptionMenu(integration, vendor, methods, location, dialog, props.onConnected)
           if (credentials.length) return manageConnections(integration, methods, location, dialog, props.onConnected)
           return selectMethod(integration, methods, location, dialog, props.onConnected)
         },
       }
     })
     if (props.integrationID !== undefined) return listed
-    // k1rothic: official subscription CLIs (Mode B), then add / manage custom API gateways.
+    // k1rothic: subscription CLIs (Mode B), then add / manage custom API gateways.
     return [
-      ...listed.filter((option) => option.category !== "Custom gateways"),
-      ...officialOptions(),
+      ...listed.filter((option) => option.category === "Providers"),
+      ...listed.filter((option) => option.category === OFFICIAL_CATEGORY),
       ...listed.filter((option) => option.category === "Custom gateways"),
       {
         title: "+ Add custom gateway",
@@ -219,6 +227,31 @@ export function DialogIntegration(
       }
     />
   )
+}
+
+// k1rothic: a subscription CLI only ever chats inside k1rothic's own UI: the CLI runs hidden in the background, one
+// conversation per chat. Picking it connects it (once) and opens its models. A missing CLI goes to the install
+// screen. The full-screen CLI is only reachable through the explicit /official command.
+function subscriptionMenu(
+  integration: IntegrationInfo,
+  vendor: Vendor,
+  methods: ConnectMethod[],
+  location: LocationRef,
+  dialog: ReturnType<typeof useDialog>,
+  onConnected?: OnIntegrationConnected,
+) {
+  if (locate(vendor) === undefined)
+    return dialog.replace(() => (
+      <DialogOfficialVendor
+        vendor={vendor}
+        cwd={location.directory}
+        onInstalled={() => subscriptionMenu(integration, vendor, methods, location, dialog, onConnected)}
+      />
+    ))
+  if (credentialConnections(integration).length === 0)
+    return selectMethod(integration, methods, location, dialog, onConnected)
+  if (onConnected) return onConnected(integration.id)
+  dialog.clear()
 }
 
 function manageConnections(

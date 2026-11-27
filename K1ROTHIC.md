@@ -16,10 +16,12 @@ The Go prototype that came before this fork is on the `go-prototype` branch.
   only metadata and a blanked copy.
 - **Mode A uses your own API keys.** Vendor subscription logins (ChatGPT/Codex,
   GitHub Copilot, SuperGrok, Poe) are disabled.
-- **Mode B (`/official`) only starts the official CLI**, interactively (never
-  `-p`/`exec`/`--json`); the only arguments are `--model`, continue-last-conversation
-  and the CLI's own sign-in command. It never reads, copies, proxies or refreshes
-  vendor tokens or credential files.
+- **Mode B uses the official CLIs, signed in by themselves.** Full screen (`/official`)
+  starts the CLI interactively; the only arguments are `--model`,
+  continue-last-conversation and the CLI's own sign-in command. In chat, the
+  "(subscription)" providers drive the CLI in the background through its official
+  programmatic interface (Claude Agent SDK, ACP). Neither reads, copies, proxies or
+  refreshes vendor tokens or credential files.
 
 ## Changes from opencode
 
@@ -30,17 +32,18 @@ The Go prototype that came before this fork is on the `go-prototype` branch.
 | Logo | "k1rothic" wordmark | `tui/src/logo.ts` |
 | Themes | carbon (default), graphite, ocean, forest, amber, rose, violet, mono | `script/k1rothic/gen-themes.ts` → `tui/src/theme/assets/*.json`, `tui/src/theme/v1.ts`, `tui/src/context/theme.tsx` |
 | Keys | Secrets in the OS keychain via `Bun.secrets` (service `k1rothic`); DB rows redacted; old plaintext rows moved on first read; in-memory store under `bun test` | `core/src/credential/vault.ts`, `core/src/credential.ts` |
-| Providers | Removed ChatGPT/Codex login, GitHub Copilot, opencode Console/Zen (free models) and the Claude Agent bridge (drives the local `claude`); SuperGrok and Poe logins off | `core/src/plugin/provider.ts`, `plugin/provider/{openai,xai,poe}.ts` |
+| Providers | Removed ChatGPT/Codex login, GitHub Copilot and opencode Console/Zen (free models); SuperGrok and Poe logins off | `core/src/plugin/provider.ts`, `plugin/provider/{openai,xai,poe}.ts` |
 | Updates | No update feed (opencode.ai serves opencode builds): background check and `upgrade` disabled | `cli/src/services/updater.ts` |
 | Model catalog | Bundled snapshot only; fetch from models.opencode.ai only with `K1ROTHIC_MODELS_FETCH=1` or `OPENCODE_MODELS_URL` | `cli/src/server-process.ts` |
 | Pairing / push | `/pair`, `/update` hidden; `k1rothic pair` refuses; push relays empty | `tui/src/app.tsx`, `cli/src/commands/handlers/pair.ts`, `core/src/push/list.ts` |
 | MCP OAuth | opencode's hosted client metadata document not used (dynamic registration instead) | `core/src/mcp/oauth.ts` |
 | Vendor files | `~/.claude` (CLAUDE.md, skills) not read — project `.claude/` still is; Claude Code IDE lock files (`~/.claude/ide`, contain an auth token) not read | `core/src/config/discovery.ts`, `core/src/config/plugin/instruction.ts`, `tui/src/editor.ts` |
 | `/provider` | `/connect` renamed (`/connect` stays as an alias); dialog titled "Providers" | `tui/src/app.tsx`, `component/dialog-integration.tsx` |
-| Provider list | Default allowlist: anthropic, openai, openrouter, google, xai, deepseek, mistral, groq, ollama, lmstudio + the user's custom providers; a user `enabled_providers` / `provider.use` policy replaces it | `core/src/k1rothic-providers.ts`, `core/src/config/plugin/policy.ts`, `server/src/handlers/integration.ts` |
+| Provider list | Default allowlist: anthropic, openai, openrouter, google, xai, deepseek, mistral, groq, ollama, lmstudio, the subscription CLIs (claude-agent, antigravity-agent, codex-agent) + the user's custom providers; a user `enabled_providers` / `provider.use` policy replaces it | `core/src/k1rothic-providers.ts`, `core/src/config/plugin/policy.ts`, `server/src/handlers/integration.ts` |
 | Custom gateways | `/provider` → "+ Add custom gateway": name → API format (OpenAI-compatible, OpenAI Responses, Anthropic-compatible) → base URL → key (OS keychain) → models (typed or loaded from `/models`); saved as a custom provider in the global `k1rothic.jsonc`; "Edit or delete gateways" | `core/src/k1rothic-gateways.ts`, `tui/src/component/dialog-gateway.tsx` |
 | Session UI | Top bar (working directory · context meter `██░░ 22.5%  113K / 500K`); user message as a shaded block `❯ text` with the time; `◆ Thought for 2.0s`; status row `⠋ Responding… 15s … 17s ↓9.45k [stop]` above the input; rounded input box with `model (effort) · agent · ask/auto-approve` in its bottom border; footer `Shift+Tab:mode │ Esc:cancel │ Ctrl+P:commands`; session tab row hidden until `alt+t` or `/tabs`; model label drawn lighter (`titleColor`) | `tui/src/component/k1-chrome.tsx`, `component/prompt/index.tsx`, `feature-plugins/prompt/footer.tsx`, `routes/session/{index,group-view,message-parts}.tsx`, `app.tsx`, `util/session.ts` |
-| Mode B | Claude Code / Codex / Antigravity appear in `/provider` ("Subscriptions (official CLIs)"), in the model picker, and in `/official`. Per CLI: **Install** (runs the vendor's official one-line installer visibly, only after confirmation), **Sign in** (the CLI's own login: `codex login`, otherwise the CLI asks on start), **Start with model** (preset, default or custom id → `--model <id>`), then new conversation or continue the last one (`--continue` / `resume --last`). One-time subscription-terms notice; continuing on a different model than last time warns that the prompt cache is lost. The TUI suspends and the CLI runs with inherited stdio and no added env | `tui/src/official.ts`, `tui/src/component/dialog-official.tsx`, `component/dialog-integration.tsx`, `component/dialog-model.tsx` |
+| Mode B in chat | `/provider` → "Subscriptions (official CLIs)" → Claude Code / Antigravity / Codex connects it (or offers the official installer when it's missing) and opens its models. The CLI then runs in the background and its text, thinking and tool calls appear in k1rothic's chat; its models are in the model picker. Each k1rothic session keeps one vendor conversation (resumed after restarts), so the prompt cache is reused; only the new message is sent each turn. The agent's tools ask through k1rothic's permission prompt. Claude uses opencode's Claude Agent bridge (Agent SDK; `ANTHROPIC_API_KEY` is not passed on, so the subscription is billed); Antigravity uses `agy acp`; Codex uses the `codex-acp` adapter (PATH, or fetched by `npx`) | `core/src/plugin/provider/acp-agent/`, `core/src/plugin/provider/claude-agent/`, `tui/src/component/dialog-integration.tsx` |
+| Mode B full screen | Only the explicit `/official` command; `/provider` and the model picker never show a CLI's own screen. Per CLI: **Install** (runs the vendor's official one-line installer visibly, only after confirmation), **Sign in** (the CLI's own login: `codex login`, otherwise the CLI asks on start), **Start with model** (preset, default or custom id → `--model <id>`), then new conversation or continue the last one (`--continue` / `resume --last`). One-time subscription-terms notice; continuing on a different model than last time warns that the prompt cache is lost. The TUI suspends and the CLI runs with inherited stdio and no added env | `tui/src/official.ts`, `tui/src/component/dialog-official.tsx`, `component/dialog-integration.tsx`, `component/dialog-model.tsx` |
 | Cache warning | Switching the k1rothic model in a session that already has messages shows a toast: the provider's prompt cache doesn't carry over to another model | `tui/src/component/dialog-model.tsx` |
 
 ## Build and run

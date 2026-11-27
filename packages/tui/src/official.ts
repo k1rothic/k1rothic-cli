@@ -30,6 +30,8 @@ export interface VendorModel {
 
 export interface Vendor {
   readonly id: VendorID
+  /** The k1rothic provider that runs this CLI in the background inside the chat. */
+  readonly providerID: string
   readonly name: string
   readonly binary: string
   readonly plan: string
@@ -49,6 +51,7 @@ export interface Vendor {
 export const vendors: readonly Vendor[] = [
   {
     id: "claude",
+    providerID: "claude-agent",
     name: "Claude Code",
     binary: "claude",
     plan: "Claude Pro / Max",
@@ -71,6 +74,7 @@ export const vendors: readonly Vendor[] = [
   },
   {
     id: "codex",
+    providerID: "codex-agent",
     name: "OpenAI Codex CLI",
     binary: "codex",
     plan: "ChatGPT Plus / Pro",
@@ -96,6 +100,7 @@ export const vendors: readonly Vendor[] = [
   },
   {
     id: "agy",
+    providerID: "antigravity-agent",
     name: "Google Antigravity",
     binary: "agy",
     plan: "Google AI Pro / Ultra",
