@@ -1,5 +1,6 @@
 import { isRecord } from "./record"
 
+import { sym } from "../k1-glyphs"
 type ConfigIssue = { message: string; path: string[] }
 
 export function cliErrorMessage(input: unknown): string | undefined {
@@ -24,8 +25,8 @@ export function cliErrorMessage(input: unknown): string | undefined {
     return [
       `Model not found: ${field(model, "providerID")}/${field(model, "modelID")}`,
       ...(suggestions.length ? ["Did you mean: " + suggestions.join(", ")] : []),
-      "Try: `opencode models` to list available models",
-      "Or check your config (opencode.json) provider/model names",
+      "Try: `k1rothic models` to list available models",
+      "Or check your config (k1rothic.json) provider/model names",
     ].join("\n")
   }
 
@@ -63,7 +64,7 @@ export function cliErrorMessage(input: unknown): string | undefined {
       : []
     return [
       `Configuration is invalid${path && path !== "config" ? ` at ${path}` : ""}` + (message ? `: ${message}` : ""),
-      ...issues.map((issue) => "↳ " + issue.message + " " + issue.path.join(".")),
+      ...issues.map((issue) => sym("↳ ") + issue.message + " " + issue.path.join(".")),
     ].join("\n")
   }
 

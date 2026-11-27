@@ -22,11 +22,15 @@ const decodeError = Schema.decodeUnknownOption(
   ),
 )
 
+// k1rothic: subscription logins are disabled; Mode A uses API keys only.
+const subscriptionLogins = false as boolean
+
 export const PoePlugin = define({
   id: "opencode.provider.poe",
   effect: Effect.fn(function* (ctx) {
     const http = yield* HttpClient.HttpClient
     yield* ctx.integration.transform((editor) => {
+      if (!subscriptionLogins) return
       editor.method.update({
         integrationID,
         method: { id: methodID, type: "oauth", label: "Login with Poe (browser)" },

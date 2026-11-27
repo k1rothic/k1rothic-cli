@@ -54,7 +54,7 @@ export function DialogModel(props: { integrationID?: string }) {
 }
 
 function DialogConnectedModels(props: {
-  // Lists only the models of this integration's providers, such as OpenCode's workspace and OpenCode Go.
+  // Lists only the models of this integration's providers, such as k1rothic's workspace and OpenCode Go.
   integrationID?: string
   onSelect: (providerID: string, modelID: string) => void
   onConnect: () => void
@@ -75,7 +75,7 @@ function DialogConnectedModels(props: {
     if (newDesigns()) return favorite ? <FavoriteMarker /> : undefined
     return isFreeModel(model) ? "Free" : undefined
   }
-  // OpenCode's own free models get their own group at the end of the list instead of joining "OpenCode".
+  // OpenCode's own free models get their own group at the end of the list instead of joining "k1rothic".
   const freeGroup = (model: ModelInfo) =>
     newDesigns() && !props.integrationID && model.providerID === "opencode" && isFreeModel(model)
 

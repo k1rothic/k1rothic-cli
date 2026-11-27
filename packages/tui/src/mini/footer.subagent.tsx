@@ -10,6 +10,7 @@ import type { RunFooterTheme, RunTheme } from "./theme"
 import { stringWidth } from "../util/string-width"
 import { footerMenuText } from "./footer.menu"
 
+import { sym } from "../k1-glyphs"
 export const SUBAGENT_INSPECTOR_ROWS = 14
 
 function statusColor(theme: RunFooterTheme, status: FooterSubagentTab["status"]) {
@@ -38,10 +39,10 @@ function statusIcon(status: FooterSubagentTab["status"], mono: boolean) {
   }
 
   if (status === "error") {
-    return mono ? "!" : "◍"
+    return mono ? "!" : sym("◍")
   }
 
-  return mono ? "." : "◔"
+  return mono ? "." : sym("◔")
 }
 
 export function RunFooterSubagentBody(props: {

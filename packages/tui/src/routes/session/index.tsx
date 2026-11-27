@@ -12,6 +12,7 @@ import {
   Switch,
   type Accessor,
 } from "solid-js"
+import { K1TopBar } from "../../component/k1-chrome"
 import path from "node:path"
 import { EOL, tmpdir } from "node:os"
 import { mkdir, writeFile } from "node:fs/promises"
@@ -132,6 +133,7 @@ import { containsAnchor, createTimelineAnchors, groupID } from "./anchors"
 import { rowsAfter, rowsBefore, rowWeight } from "./mount-budget"
 import { findMatches, findParts, findPattern, sameFindMatch, type FindMatch } from "./find"
 import { FindBar, FindText, useFindHighlight } from "./find-view"
+import { sym } from "../../k1-glyphs"
 export { InlineToolRow } from "./message-parts"
 export { toolDisplay } from "./message-parts"
 
@@ -1660,10 +1662,16 @@ export function Session(props: {
         <box
           flexGrow={1}
           minHeight={0}
+          paddingTop={1}
           paddingBottom={1}
           paddingLeft={dimensions().width < 44 ? 1 : 2}
           paddingRight={dimensions().width < 44 ? 1 : 2}
         >
+          {/* k1rothic: top bar — working directory on the left, context meter on the right. */}
+          <Show when={session()}>
+            <K1TopBar sessionID={route.sessionID} />
+            <box height={1} flexShrink={0} />
+          </Show>
           <Show when={session()}>
             <box flexGrow={1} minHeight={0} position="relative">
               <scrollbox
@@ -2236,7 +2244,7 @@ function SessionSwitchMessageV2(props: { message: SessionMessageInfo }) {
     return (
       <box paddingLeft={3}>
         <text>
-          <span style={{ fg: theme.text.muted }}>↳ Moved to </span>
+          <span style={{ fg: theme.text.muted }}>{sym("↳ Moved to ")}</span>
           <span style={{ fg: theme.text.feedback.info.base }}>{props.message.location.directory}</span>
         </text>
       </box>
@@ -2289,7 +2297,7 @@ function SessionNoticeMessageV2(props: { message: SessionMessageInfo }) {
     if (state() === "error") return "failed"
     return state() ?? "finished"
   }
-  const heading = () => `${state() === "completed" ? "↳" : "!"} ${actor()} ${status()}`
+  const heading = () => sym(`${state() === "completed" ? "↳" : "!"} ${actor()} ${status()}`)
   const suffix = () => Locale.truncateWidth(` · ${description()}`, Math.max(0, ctx.width - 3 - stringWidth(heading())))
   const color = () => {
     if (state() === "error") return theme.text.feedback.error.base
@@ -2301,7 +2309,7 @@ function SessionNoticeMessageV2(props: { message: SessionMessageInfo }) {
     <Show
       when={completion()}
       fallback={
-        <InlineToolRow icon={source() === "goal" ? "◎" : "◈"} color={theme.text.muted} pending="Notice" complete={true}>
+        <InlineToolRow icon={source() === "goal" ? sym("◎") : sym("◈")} color={theme.text.muted} pending="Notice" complete={true}>
           {text()}
         </InlineToolRow>
       }
@@ -2363,12 +2371,12 @@ function CompactionMessage(props: { message: Extract<SessionMessageInfo, { type:
         <box flexDirection="row" gap={1} paddingLeft={1} paddingRight={1}>
           <Switch>
             <Match when={status() === "running"}>
-              <Show when={ctx.config.animations ?? true} fallback={<text fg={color()}>⋯</text>}>
+              <Show when={ctx.config.animations ?? true} fallback={<text fg={color()}>{sym("⋯")}</text>}>
                 <spinner frames={SPINNER_FRAMES} interval={80} color={color()} />
               </Show>
             </Match>
             <Match when={status() === "failed" && !cancelled()}>
-              <text fg={color()}>✗</text>
+              <text fg={color()}>{sym("✗")}</text>
             </Match>
           </Switch>
           <text fg={color()}>
@@ -2413,7 +2421,7 @@ function CompactionQueued() {
     <box flexDirection="row" alignItems="center">
       <box border={["top"]} borderColor={theme.border.base} flexGrow={1} />
       <box flexDirection="row" gap={1} paddingLeft={1} paddingRight={1}>
-        <text fg={theme.text.muted}>◇</text>
+        <text fg={theme.text.muted}>{sym("◇")}</text>
         <text fg={theme.text.muted}>Compaction queued</text>
       </box>
       <box border={["top"]} borderColor={theme.border.base} flexGrow={1} />
@@ -2526,8 +2534,6 @@ function ShellMessage(props: { message: Extract<SessionMessageInfo, { type: "she
 function UserMessage(props: { message: SessionMessageUser }) {
   const ctx = use()
   const newDesigns = useNewDesigns()
-  const data = useData()
-  const local = useLocal()
   // Opted-in reads leave stored files as `media:` refs, a PromptAttachment variant the generated message type omits.
   const files = createMemo(() => deduplicateVisibleImages<PromptAttachment>(props.message.files ?? []))
   const skills = createMemo(() => props.message.skills ?? [])
@@ -2542,7 +2548,6 @@ function UserMessage(props: { message: SessionMessageUser }) {
   const theme = useTheme()
   const mode = themes.mode
   const [hover, setHover] = createSignal(false)
-  const color = createMemo(() => local.agent.color(data.session.get(ctx.sessionID)?.agent ?? "build"))
   const delivery = createMemo(() => ctx.pendingDelivery(props.message.id))
   const dialog = useDialog()
   const renderer = useRenderer()
@@ -2553,12 +2558,8 @@ function UserMessage(props: { message: SessionMessageUser }) {
 
   return (
     <Show when={props.message.text.trim() || files().length || skills().length}>
-      <box
-        border={["left"]}
-        borderColor={delivery() ? theme.border.base : color()}
-        customBorderChars={SplitBorder.customBorderChars}
-        backgroundColor={theme.background.raised.base}
-      >
+      {/* k1rothic: full-width shaded block, sym("❯ text") with the time on the right (no agent-colored edge). */}
+      <box backgroundColor={theme.background.raised.base}>
         <SessionImages images={images()} paddingLeft={2} />
         <box
           onMouseOver={() => {
@@ -2596,10 +2597,20 @@ function UserMessage(props: { message: SessionMessageUser }) {
           backgroundColor={hover() ? theme.decrease(theme.background.raised.base) : theme.background.raised.base}
           flexShrink={0}
         >
-          <FindText
-            part={{ messageID: props.message.id, partID: "message", text: props.message.text }}
-            fg={theme.text.base}
-          />
+          <box flexDirection="row" gap={1}>
+            <text fg={delivery() ? theme.text.muted : theme.text.base} attributes={TextAttributes.BOLD} flexShrink={0} selectable={false}>
+              {sym("❯")}
+            </text>
+            <box flexGrow={1} flexShrink={1} minWidth={0}>
+              <FindText
+                part={{ messageID: props.message.id, partID: "message", text: props.message.text }}
+                fg={theme.text.base}
+              />
+            </box>
+            <text fg={theme.text.muted} flexShrink={0} wrapMode="none" selectable={false}>
+              {k1Time(props.message.time.created)}
+            </text>
+          </box>
           <Show when={skills().length}>
             <box flexDirection="row" paddingTop={1} gap={1} flexWrap="wrap">
               <For each={skills()}>
@@ -2732,7 +2743,7 @@ function AssistantRetry(props: { retry: SessionMessageAssistant["retry"] }) {
       {(retry) => (
         <box paddingLeft={3}>
           <text fg={theme.text.feedback.warning.base}>
-            ⚠ {seconds() > 0 ? `Retrying in ${seconds()}s` : "Retry due"} · attempt {retry().attempt} ·{" "}
+            {sym("⚠")} {seconds() > 0 ? `Retrying in ${seconds()}s` : "Retry due"} · attempt {retry().attempt} ·{" "}
             {retry().error.message}
           </text>
         </box>
@@ -2919,7 +2930,7 @@ function GenericTool(props: ToolProps) {
   return (
     <>
       <InlineTool
-        icon={props.part.state.status === "error" ? "✗" : "✓"}
+        icon={props.part.state.status === "error" ? sym("✗") : sym("✓")}
         complete={props.part.state.status === "completed"}
         pending={props.tool}
         spinner={loading()}
@@ -3382,7 +3393,7 @@ function Write(props: ToolProps) {
 function Glob(props: ToolProps) {
   const pathFormatter = usePathFormatter()
   return (
-    <InlineTool icon="✱" pending="Finding files…" complete={stringValue(props.input.pattern)} part={props.part}>
+    <InlineTool icon={sym("✱")} pending="Finding files…" complete={stringValue(props.input.pattern)} part={props.part}>
       Glob "{stringValue(props.input.pattern)}"{" "}
       <Show when={stringValue(props.input.path)}>in {pathFormatter.format(stringValue(props.input.path))} </Show>
       <Show when={finiteNumber(props.metadata.count)}>
@@ -3421,7 +3432,7 @@ function Read(props: ToolProps) {
         {(filepath) => (
           <box paddingLeft={3}>
             <text fg={theme.text.muted}>
-              ↳ Loaded {pathFormatter.format(filepath)}
+              {sym("↳ Loaded")} {pathFormatter.format(filepath)}
             </text>
           </box>
         )}
@@ -3433,7 +3444,7 @@ function Read(props: ToolProps) {
 function Grep(props: ToolProps) {
   const pathFormatter = usePathFormatter()
   return (
-    <InlineTool icon="✱" pending="Searching content…" complete={stringValue(props.input.pattern)} part={props.part}>
+    <InlineTool icon={sym("✱")} pending="Searching content…" complete={stringValue(props.input.pattern)} part={props.part}>
       Grep "{stringValue(props.input.pattern)}"{" "}
       <Show when={stringValue(props.input.path)}>in {pathFormatter.format(stringValue(props.input.path))} </Show>
       <Show when={finiteNumber(props.metadata.matches)}>
@@ -3455,7 +3466,7 @@ function WebSearch(props: ToolProps) {
   const ctx = use()
   const provider = createMemo(() => stringValue(props.metadata.provider))
   return (
-    <InlineTool icon="◈" pending="Searching web…" complete={stringValue(props.input.query)} part={props.part}>
+    <InlineTool icon={sym("◈")} pending="Searching web…" complete={stringValue(props.input.query)} part={props.part}>
       <Show when={provider()} fallback="Web Search">
         {(value) => (
           <>
@@ -3496,7 +3507,7 @@ function Subagent(props: ToolProps) {
 
   return (
     <InlineTool
-      icon={isRunning() ? "│" : continuation() ? "↳" : props.part.state.status === "completed" ? "✓" : "│"}
+      icon={isRunning() ? "│" : continuation() ? sym("↳") : props.part.state.status === "completed" ? sym("✓") : "│"}
       spinner={isRunning()}
       running={isRunning()}
       complete={description()}
@@ -3553,7 +3564,7 @@ function ExecuteCallView(props: { call: Accessor<ExecuteCall> }) {
     >
       <box flexDirection="row">
         <box width={INLINE_TOOL_ICON_WIDTH} flexShrink={0}>
-          <text fg={color()}>{props.call().status === "error" ? "✗" : "›"}</text>
+          <text fg={color()}>{props.call().status === "error" ? sym("✗") : "›"}</text>
         </box>
         <text flexGrow={1} wrapMode="none" truncate fg={color()}>
           {expanded() ? props.call().tool : executeCallSummary(props.call())}
@@ -3601,7 +3612,7 @@ function Execute(props: ToolProps) {
   return (
     <>
       <InlineTool
-        icon={hasRuntimeError() ? "✗" : props.part.state.status === "completed" ? "✓" : "│"}
+        icon={hasRuntimeError() ? sym("✗") : props.part.state.status === "completed" ? sym("✓") : "│"}
         color={hasRuntimeError() ? theme.text.feedback.error.base : undefined}
         spinner={isLoading()}
         pending="execute"
@@ -3618,7 +3629,7 @@ function Execute(props: ToolProps) {
           <For each={outputPreview().split("\n")}>
             {(line, index) => (
               <text fg={theme.text.feedback.error.base}>
-                {index() === 0 ? "↳ " : "  "}
+                {index() === 0 ? sym("↳ ") : "  "}
                 {line}
               </text>
             )}
@@ -3781,7 +3792,7 @@ function TodoWrite(props: ToolProps) {
       </Match>
       <Match when={true}>
         <InlineTool
-          icon="⚙"
+          icon={sym("⚙")}
           pending="Updating todos…"
           complete={props.part.state.status === "completed" || props.part.state.status === "error"}
           part={props.part}
@@ -4075,4 +4086,10 @@ export function parseDiagnostics(value: unknown, filePath: string) {
       return [{ range: { start: { line, character } }, message }]
     })
     .slice(0, 3)
+}
+
+// k1rothic: "8:19 AM" style message times.
+function k1Time(ms: number | undefined) {
+  if (!ms) return ""
+  return new Date(ms).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
 }

@@ -18,6 +18,7 @@ import { canonicalToolName } from "../../util/tool-display"
 import { useSessionLinks } from "../../ui/session-link"
 import { useFindHighlight } from "./find-view"
 
+import { sym } from "../../k1-glyphs"
 export const INLINE_TOOL_ICON_WIDTH = 2
 
 const toolDisplays = new Set([
@@ -157,40 +158,28 @@ function ReasoningHeader(props: {
   duration?: string
 }) {
   const theme = useTheme()
-  const fg = () =>
-    props.open
-      ? RGBA.fromValues(
-          theme.text.feedback.warning.base.r,
-          theme.text.feedback.warning.base.g,
-          theme.text.feedback.warning.base.b,
-          0.6,
-        )
-      : theme.text.feedback.warning.base
+  // k1rothic: "◆ Thought for 2.0s" in muted grey.
+  const fg = () => (props.open ? theme.text.base : theme.text.muted)
 
   return (
     <Switch>
       <Match when={!props.done}>
         <box flexDirection="row">
-          <Spinner color={fg()}>{props.title ? "Thinking: " + props.title : "Thinking"}</Spinner>
+          {/* k1rothic: braille spinner with a light sweep over the text while the model thinks. */}
+          <Spinner color={fg()} shimmer={theme.text.base}>
+            {props.title ? "Thinking: " + props.title : "Thinking…"}
+          </Spinner>
         </box>
       </Match>
       <Match when={true}>
         <text fg={fg()} wrapMode="none">
-          <Show when={props.toggleable}>
-            <span>{props.open ? "- " : "+ "}</span>
-          </Show>
+          <span>{props.open ? sym("◇ ") : sym("◆ ")}</span>
           <span>Thought</span>
-          <Show when={props.title || props.duration}>
-            <span>: </span>
-          </Show>
-          <Show when={props.title}>
-            <span>{props.title}</span>
-          </Show>
           <Show when={props.duration}>
-            <span>
-              {props.title ? " · " : ""}
-              {props.duration}
-            </span>
+            <span> for {props.duration}</span>
+          </Show>
+          <Show when={props.open && props.title}>
+            <span> · {props.title}</span>
           </Show>
         </text>
       </Match>
@@ -256,11 +245,16 @@ export function InlineToolRow(props: {
   onMouseOut?: () => void
   onMouseUp?: (event: MouseEvent) => void
 }) {
+  // k1rothic: running rows ("Thinking…", tools) animate with the braille spinner and a light sweep.
+  const theme = useTheme()
   return (
     <box paddingLeft={3} onMouseOver={props.onMouseOver} onMouseOut={props.onMouseOut} onMouseUp={props.onMouseUp}>
       <Switch>
         <Match when={props.spinner}>
-          <Show when={props.status} fallback={<Spinner color={props.color} children={props.children} />}>
+          <Show
+            when={props.status}
+            fallback={<Spinner color={props.color} shimmer={theme.text.base} children={props.children} />}
+          >
             {(status) => (
               <box flexDirection="row" gap={1}>
                 <Spinner color={props.color} />
@@ -272,7 +266,14 @@ export function InlineToolRow(props: {
           </Show>
         </Match>
         <Match when={true}>
-          <Show fallback={<Spinner color={props.color}>{props.pending}</Spinner>} when={props.complete || props.failed}>
+          <Show
+            fallback={
+              <Spinner color={props.color} shimmer={theme.text.base}>
+                {props.pending}
+              </Spinner>
+            }
+            when={props.complete || props.failed}
+          >
             <box flexDirection="row">
               <text
                 width={INLINE_TOOL_ICON_WIDTH}

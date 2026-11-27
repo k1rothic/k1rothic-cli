@@ -53,12 +53,13 @@ import { Keymap } from "../context/keymap"
 import "./spinner-renderable"
 import { SPINNER_FRAMES } from "./spinner-frames"
 import { SessionTabsRailControls, SessionTabHalfRow } from "./session-tabs-rail"
+import { sym } from "../k1-glyphs"
 import "./title-shimmer"
 
 export const TAB_SPINNERS = {
   dots: { frames: SPINNER_FRAMES, interval: 80 },
-  arcs: { frames: ["◜", "◝", "◞", "◟"], interval: 120 },
-  quadrants: { frames: ["◴", "◷", "◶", "◵"], interval: 120 },
+  arcs: { frames: [sym("◜"), sym("◝"), sym("◞"), sym("◟")], interval: 120 },
+  quadrants: { frames: [sym("◴"), sym("◷"), sym("◶"), sym("◵")], interval: 120 },
   line: { frames: ["|", "/", "-", "\\"], interval: 120 },
 }
 export type TabSpinner = keyof typeof TAB_SPINNERS
@@ -1095,7 +1096,7 @@ function VerticalSessionTabs(props: {
                             tabs.close(tab.sessionID)
                           }}
                         >
-                          {hovered() === tab.sessionID ? "✕" : ""}
+                          {hovered() === tab.sessionID ? sym("✕") : ""}
                         </text>
                       </box>
                     </box>
@@ -1741,7 +1742,7 @@ function HorizontalSessionTabs(props: {
                     tabs.close(tab === NEW_SESSION_TAB ? undefined : tab.sessionID)
                   }}
                 >
-                  {hovered() === tab.sessionID ? "✕" : ""}
+                  {hovered() === tab.sessionID ? sym("✕") : ""}
                 </text>
               </box>
             </box>

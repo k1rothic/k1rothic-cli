@@ -63,6 +63,7 @@ import type {
 } from "./types"
 import type { RunTheme } from "./theme"
 
+import { sym } from "../k1-glyphs"
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
 
 const EMPTY_BORDER = {
@@ -998,7 +999,7 @@ export function RunFooterView(props: RunFooterViewProps) {
           borderColor={theme().border}
           customBorderChars={{
             ...EMPTY_BORDER,
-            vertical: props.mono ? "|" : "┃",
+            vertical: props.mono ? "|" : sym("┃"),
           }}
         >
           <RunFooterSubagentBody

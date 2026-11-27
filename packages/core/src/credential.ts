@@ -10,6 +10,7 @@ import { Bus } from "./bus.js"
 import { makeGlobalNode } from "@opencode/util/effect/app-node"
 import { EffectFlock } from "@opencode/util/effect-flock"
 import { CredentialTable } from "./credential/sql.js"
+import * as Vault from "./credential/vault.js"
 import { ErrorSummary } from "./util/error-summary.js"
 
 export const ID = Credential.ID
@@ -92,20 +93,41 @@ const layer = Layer.effect(
     const pending = new Map<ID, Fiber.Fiber<OAuth | undefined, unknown>>()
     // Rows written before v2.1 may carry the old key credential shape.
     const decode = Schema.decodeUnknownSync(CredentialLegacy.Value)
-    const stored = (row: typeof CredentialTable.$inferSelect) => {
-      if (!row.integration_id) return
-      return new Info({
-        id: row.id,
-        integrationID: row.integration_id,
-        label: row.label,
-        value: decode(row.value),
+    // k1rothic: the secret comes from the OS keychain; the row holds a redacted
+    // copy. A row that still carries a secret (written before the keychain) is
+    // moved into the keychain and redacted on first read.
+    const keychainWrite = (id: ID, value: Value) =>
+      Effect.tryPromise({ try: () => Vault.write(id, value), catch: (error) => error }).pipe(
+        Effect.tapError((error) => Effect.logError("keychain write failed", { credentialID: id, error: String(error) })),
+        Effect.orDie,
+      )
+    const stored = (row: typeof CredentialTable.$inferSelect) =>
+      Effect.gen(function* () {
+        if (!row.integration_id) return
+        const secret = yield* Effect.promise(() => Vault.read(row.id).catch(() => undefined))
+        let value = decode(secret ?? row.value)
+        if (secret === undefined && Vault.holdsSecret(value)) {
+          const moved = yield* Effect.tryPromise(() => Vault.write(row.id, value)).pipe(
+            Effect.as(true),
+            Effect.catch(() => Effect.succeed(false)),
+          )
+          if (moved)
+            yield* db
+              .update(CredentialTable)
+              .set({ value: Vault.redact(value) })
+              .where(eq(CredentialTable.id, row.id))
+              .run()
+              .pipe(Effect.orDie)
+          else yield* Effect.logWarning("credential still in database: keychain unavailable", { credentialID: row.id })
+        }
+        if (secret === undefined && !Vault.holdsSecret(value) && value.type !== "external")
+          yield* Effect.logWarning("credential secret missing from keychain", { credentialID: row.id })
+        return new Info({ id: row.id, integrationID: row.integration_id, label: row.label, value })
       })
-    }
     const storedRows = (rows: ReadonlyArray<typeof CredentialTable.$inferSelect>) =>
-      rows.flatMap((row) => {
-        const credential = stored(row)
-        return credential ? [credential] : []
-      })
+      Effect.forEach(rows, stored).pipe(
+        Effect.map((list) => list.flatMap((credential) => (credential ? [credential] : []))),
+      )
     const rows = (where?: SQL) =>
       db
         .select()
@@ -113,7 +135,7 @@ const layer = Layer.effect(
         .where(where)
         .orderBy(asc(CredentialTable.active), asc(CredentialTable.time_created), asc(CredentialTable.id))
         .all()
-        .pipe(Effect.orDie, Effect.map(storedRows))
+        .pipe(Effect.orDie, Effect.flatMap(storedRows))
     type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
     const currentActive = (tx: Transaction, integrationID: Integration.ID) =>
       tx
@@ -186,7 +208,7 @@ const layer = Layer.effect(
       list: Effect.fn("Credential.list")((integrationID) => rows(eq(CredentialTable.integration_id, integrationID))),
       get: Effect.fn("Credential.get")(function* (id) {
         const row = yield* db.select().from(CredentialTable).where(eq(CredentialTable.id, id)).get().pipe(Effect.orDie)
-        return row ? stored(row) : undefined
+        return row ? yield* stored(row) : undefined
       }),
       create: Effect.fn("Credential.create")(function* (input) {
         const credential = new Info({
@@ -195,6 +217,7 @@ const layer = Layer.effect(
           label: input.label ?? "default",
           value: input.value,
         })
+        yield* keychainWrite(credential.id, credential.value)
         const activated = yield* db
           .transaction((tx) =>
             Effect.gen(function* () {
@@ -210,7 +233,7 @@ const layer = Layer.effect(
                   id: credential.id,
                   integration_id: credential.integrationID,
                   label: credential.label,
-                  value: credential.value,
+                  value: Vault.redact(credential.value),
                   active: activate,
                 })
                 .run()
@@ -273,9 +296,10 @@ const layer = Layer.effect(
           return
         }
         if (updates.label === credential.label && updates.value === undefined) return
+        if (updates.value !== undefined) yield* keychainWrite(id, updates.value)
         const updated = yield* db
           .update(CredentialTable)
-          .set({ label: updates.label, value: updates.value })
+          .set({ label: updates.label, value: updates.value === undefined ? undefined : Vault.redact(updates.value) })
           .where(eq(CredentialTable.id, id))
           .returning({ id: CredentialTable.id })
           .get()
@@ -323,6 +347,7 @@ const layer = Layer.effect(
           )
           .pipe(logFailure("credential remove failed", { credentialID: id }))
         if (!removed) return
+        yield* Effect.promise(() => Vault.remove(id).catch(() => undefined))
         yield* Effect.logInfo("credential removed", {
           credentialID: id,
           integrationID: removed.integrationID,

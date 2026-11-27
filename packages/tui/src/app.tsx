@@ -71,6 +71,7 @@ import { DialogStatus } from "./component/dialog-status"
 import { DialogConfig } from "./component/dialog-config"
 import { DialogDebug } from "./component/dialog-debug"
 import { DialogPair } from "./component/dialog-pair"
+import { DialogOfficial } from "./component/dialog-official"
 import { DialogHighlights } from "./component/dialog-highlights"
 import { claim } from "./util/highlights"
 import { DialogThemeList } from "./component/dialog-theme-list"
@@ -116,9 +117,13 @@ import { PanelProvider, usePanel } from "./context/panel"
 import { SessionFrame } from "./component/session-frame"
 import { createTuiClipboard } from "./clipboard"
 
+// k1rothic: commands of opencode features that k1rothic does not ship.
+const k1rothicHidden = true as boolean
+
 const appGlobalBindingCommands = ["session.list", "session.new", "open.menu", "terminal.suspend"] as const
 
 const sessionTabBindingCommands = [
+  "session.tabs.toggle",
   "session.tab.next",
   "session.tab.previous",
   "session.tab.next_unread",
@@ -632,7 +637,10 @@ function App() {
   const pasteSummaryEnabled = () => config.data.prompt?.paste !== "full"
   const tabsVertical = () =>
     config.data.tabs.layout === "vertical" && sessionTabsFitVertically(dimensions().width, tabsResize.size())
-  const tabsAvailable = () => sessionTabs.enabled() && sessionTabs.tabs().length > 0 && route.data.type !== "plugin"
+  // k1rothic: the session tab row is hidden until shown with alt+t or /tabs.
+  const [tabsShown, setTabsShown] = createSignal(false)
+  const tabsAvailable = () =>
+    tabsShown() && sessionTabs.enabled() && sessionTabs.tabs().length > 0 && route.data.type !== "plugin"
   const fullscreenPanel = () =>
     route.data.type === "session" &&
     panels.current()?.sessionID === route.data.sessionID &&
@@ -660,14 +668,14 @@ function App() {
     if (!terminalTitleEnabled()) return
 
     if (route.data.type === "home") {
-      setTerminalTitle(renderer, "OpenCode")
+      setTerminalTitle(renderer, "k1rothic")
       return
     }
 
     if (route.data.type === "session") {
       const title = session?.title
       if (!title || isFallbackTitle(title)) {
-        setTerminalTitle(renderer, "OpenCode")
+        setTerminalTitle(renderer, "k1rothic")
         return
       }
 
@@ -906,6 +914,16 @@ function App() {
         run: () => sessionTabs.close(),
       },
       {
+        name: "session.tabs.toggle",
+        title: "Show or hide session tabs",
+        category: "Session",
+        slash: { name: "tabs" },
+        enabled: sessionTabs.enabled,
+        run: () => {
+          setTabsShown((shown) => !shown)
+        },
+      },
+      {
         name: "session.tab.reopen",
         title: "Reopen closed tab",
         category: "Session",
@@ -1060,9 +1078,10 @@ function App() {
       },
       {
         name: "provider.connect",
-        title: "Connect an integration",
+        title: "Providers",
         suggested: !connected(),
-        slash: { name: "connect", aliases: ["login", "auth"] },
+        // k1rothic: /provider (the old /connect still works).
+        slash: { name: "provider", aliases: ["connect"] },
         run: () => {
           dialog.replace(() => (
             <DialogIntegration
@@ -1102,11 +1121,13 @@ function App() {
         },
         category: "System",
       },
-      ...(updater.open
+      // k1rothic: no update feed yet and no device pairing (opencode mobile/web
+      // apps, push relay, public tunnel), so /update and /pair are hidden.
+      ...(updater.open && !k1rothicHidden
         ? [
             {
               name: "opencode.update",
-              title: "Update OpenCode",
+              title: "Update k1rothic",
               slash: { name: "update" },
               run: () => updater.open?.("manual"),
               category: "System",
@@ -1114,14 +1135,28 @@ function App() {
           ]
         : []),
       {
-        name: "server.pair",
-        title: "Pair device",
-        slash: { name: "pair", aliases: ["web"] },
+        // k1rothic Mode B: hand the terminal to an official vendor CLI.
+        name: "k1rothic.official",
+        title: "Official CLIs (claude, codex, agy)",
+        slash: { name: "official" },
         run: () => {
-          dialog.replace(() => <DialogPair />)
+          dialog.replace(() => <DialogOfficial cwd={data.location.default().directory} />)
         },
         category: "System",
       },
+      ...(k1rothicHidden
+        ? []
+        : [
+            {
+              name: "server.pair",
+              title: "Pair device",
+              slash: { name: "pair", aliases: ["web"] },
+              run: () => {
+                dialog.replace(() => <DialogPair />)
+              },
+              category: "System",
+            },
+          ]),
       ...(client.restart
         ? [
             {

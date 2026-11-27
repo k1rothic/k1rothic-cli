@@ -12,6 +12,7 @@ import { response } from "../location"
 import { WellKnown } from "@opencode/core/wellknown"
 import { Config } from "@opencode/core/config"
 import { ManagedPolicy } from "@opencode/core/managed-policy"
+import { allowedByDefault } from "@opencode/core/k1rothic-providers"
 
 const statements = Effect.fnUntraced(function* () {
   const config = yield* Config.Service
@@ -54,7 +55,17 @@ export const IntegrationHandler = HttpApiBuilder.group(Api, "server.integration"
         "integration.list",
         Effect.fn(function* () {
           const service = yield* Integration.Service
-          const current = yield* statements()
+          const config = yield* Config.Service
+          const entries = yield* config.entries()
+          const current = ManagedPolicy.statements(entries)
+          // k1rothic: list only the default providers and the user's own (custom gateways in config),
+          // unless the user's config chooses providers/integrations itself.
+          const userChooses = current.some(
+            (statement) => statement.action === "provider.use" || statement.action === "integration.connect",
+          )
+          const configured = new Set(
+            entries.flatMap((entry) => (entry.type === "document" ? Object.keys(entry.info.providers ?? {}) : [])),
+          )
           return yield* response(
             service
               .list()
@@ -63,7 +74,8 @@ export const IntegrationHandler = HttpApiBuilder.group(Api, "server.integration"
                   integrations.filter(
                     (integration) =>
                       isMcp(integration) ||
-                      ManagedPolicy.decision(current, "integration.connect", integration.id) !== "deny",
+                      (ManagedPolicy.decision(current, "integration.connect", integration.id) !== "deny" &&
+                        (userChooses || allowedByDefault(integration.id, configured))),
                   ),
                 ),
               ),

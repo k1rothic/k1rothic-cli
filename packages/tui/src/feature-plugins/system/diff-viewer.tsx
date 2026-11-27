@@ -41,6 +41,7 @@ import {
   toggleFileTreeDirectory,
 } from "./diff-viewer-file-tree-utils"
 
+import { sym } from "../../k1-glyphs"
 const ROUTE = "diff"
 const MIN_SPLIT_WIDTH = 100
 const FILE_TREE_MIN_WIDTH = 30
@@ -1038,7 +1039,7 @@ export function DiffViewerContent(props: {
                               </box>
                               <Show when={reviewed()}>
                                 <text fg={theme.text.muted} flexShrink={0}>
-                                  ✓
+                                  {sym("✓")}
                                 </text>
                               </Show>
                               <Show when={!image()} fallback={<text fg={theme.text.muted}>Image</text>}>

@@ -12,6 +12,7 @@ import { useTheme } from "../context/theme"
 import { DialogFooter, DialogHeader, DialogLayout, useDialog } from "../ui/dialog"
 import { useToast } from "../ui/toast"
 
+import { sym } from "../k1-glyphs"
 const PAGE_BYTES = 64 * 1024
 
 export function DialogShellOutput(props: { shell: ShellInfo; location: LocationRef }) {
@@ -107,7 +108,7 @@ export function DialogShellOutput(props: { shell: ShellInfo; location: LocationR
 
   const copyAction = (kind: "command" | "output", key: string) =>
     copied() === kind
-      ? { title: "✓ copied", color: theme.text.feedback.success.base, onTrigger: () => copy(kind) }
+      ? { title: sym("✓ copied"), color: theme.text.feedback.success.base, onTrigger: () => copy(kind) }
       : { title: `copy ${kind}`, key, onTrigger: () => copy(kind) }
 
   Keymap.createLayer(() => ({

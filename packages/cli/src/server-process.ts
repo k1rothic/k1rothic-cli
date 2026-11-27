@@ -117,7 +117,10 @@ const processEffect = Effect.fnUntraced(function* (options: Options) {
           models: {
             url: process.env.OPENCODE_MODELS_URL,
             file: process.env.OPENCODE_MODELS_PATH,
-            fetch: !truthy(process.env.OPENCODE_DISABLE_MODELS_FETCH),
+            // k1rothic: offline by default — the bundled snapshot is used unless the user opts in.
+            fetch:
+              !truthy(process.env.OPENCODE_DISABLE_MODELS_FETCH) &&
+              (truthy(process.env.K1ROTHIC_MODELS_FETCH) || !!process.env.OPENCODE_MODELS_URL),
           },
           config: {
             directory: process.env.OPENCODE_CONFIG_DIR,

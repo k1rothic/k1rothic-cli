@@ -9,6 +9,7 @@ import { useTheme } from "../../context/theme"
 import { DialogFooter, DialogHeader, DialogLayout, type DialogFooterAction } from "../../ui/dialog"
 import { getScrollAcceleration } from "../../util/scroll"
 
+import { sym } from "../../k1-glyphs"
 /**
  * The goal `/goal` set on a Session, from the goal plugin's RPC: fetched when the Session changes or the server
  * reconnects, since changes published meanwhile were missed, and kept current from its `changed` events.
@@ -86,7 +87,7 @@ export function GoalStatus(props: {
           onMouseUp={() => showGoal(props.context, props.sessionID, props.goal)}
         >
           <text fg={color(current())} wrapMode="none">
-            ◎ {goalLabel(current())}
+            {sym("◎")} {goalLabel(current())}
           </text>
         </box>
       )}
@@ -198,7 +199,7 @@ export function GoalDialog(props: {
               <text fg={theme.text.base}>{current().objective}</text>
               <box>
                 <text fg={goalColor(theme, current())} wrapMode="none">
-                  ◎ {current().status === "active" ? "Active" : current().status === "paused" ? "Paused" : "Met"}
+                  {sym("◎")} {current().status === "active" ? "Active" : current().status === "paused" ? "Paused" : "Met"}
                 </text>
                 <Show when={current().reason}>{(reason) => <text fg={theme.text.muted}>{reason()}</text>}</Show>
               </box>

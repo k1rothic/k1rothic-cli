@@ -6,6 +6,7 @@ import { useTheme } from "../context/theme"
 import { DialogHeader, DialogLayout, useDialog, type DialogContext } from "./dialog"
 import { useToast } from "./toast"
 
+import { sym } from "../k1-glyphs"
 export function DialogExportResult(props: { path: string; onClose?: () => void }) {
   const dialog = useDialog()
   const theme = useTheme().surface("dialog")
@@ -51,7 +52,7 @@ export function DialogExportResult(props: { path: string; onClose?: () => void }
         actions: {
           primary: [
             copied()
-              ? { title: "copied", key: "✓", color: theme.text.feedback.success.base, onTrigger: copy }
+              ? { title: "copied", key: sym("✓"), color: theme.text.feedback.success.base, onTrigger: copy }
               : { title: "copy path", key: "c", onTrigger: copy },
           ],
         },

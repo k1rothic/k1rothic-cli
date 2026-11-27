@@ -1,4 +1,4 @@
-// Per-tool display rules shared across `opencode run` output paths.
+// Per-tool display rules shared across `k1rothic run` output paths.
 //
 // Each known tool (shell, edit, write, subagent, etc.) has a ToolRule that controls
 // four display hooks:
@@ -30,6 +30,7 @@ import { isRecord } from "../util/record"
 import { parseTodos, todoMarker } from "../util/todo"
 import type { RunEntryBody, StreamCommit, ToolSnapshot } from "./types"
 
+import { sym } from "../k1-glyphs"
 export { canonicalToolName } from "../util/tool-display"
 
 type ToolView = {
@@ -276,10 +277,10 @@ function span(frame: ToolFrame): string {
 function fail(ctx: ToolFrame): string {
   const error = toolError(ctx)
   if (error) {
-    return `✖ ${ctx.name} failed: ${error}`
+    return sym(`✖ ${ctx.name} failed: ${error}`)
   }
 
-  return `✖ ${ctx.name} failed`
+  return sym(`✖ ${ctx.name} failed`)
 }
 
 function toolError(ctx: ToolFrame): string {
@@ -298,10 +299,10 @@ function toolError(ctx: ToolFrame): string {
 function fallbackStart(ctx: ToolFrame): string {
   const extra = primitiveInputSummary(ctx.input)
   if (!extra) {
-    return `⚙ ${ctx.name}`
+    return sym(`⚙ ${ctx.name}`)
   }
 
-  return `⚙ ${ctx.name} ${extra}`
+  return sym(`⚙ ${ctx.name} ${extra}`)
 }
 
 function fallbackFinal(ctx: ToolFrame): string {
@@ -337,7 +338,7 @@ function fallbackInline(ctx: ToolFrame): ToolInline {
   const title = Object.keys(ctx.input).length > 0 ? JSON.stringify(ctx.input) : "Unknown"
 
   return {
-    icon: "⚙",
+    icon: sym("⚙"),
     title: `${ctx.name} ${title}`,
   }
 }
@@ -353,7 +354,7 @@ function runGlob(p: ToolProps): ToolInline {
   const matches = p.metadata.count
   const description = matches === undefined ? suffix : `${suffix}${suffix ? " · " : ""}${count(matches, "match")}`
   return {
-    icon: "✱",
+    icon: sym("✱"),
     title,
     ...(description && { description }),
   }
@@ -366,7 +367,7 @@ function runGrep(p: ToolProps): ToolInline {
   const matches = p.metadata.matches
   const description = matches === undefined ? suffix : `${suffix}${suffix ? " · " : ""}${count(matches, "match")}`
   return {
-    icon: "✱",
+    icon: sym("✱"),
     title,
     ...(description && { description }),
   }
@@ -420,7 +421,7 @@ function runEdit(p: ToolProps): ToolInline {
 function runWebSearch(p: ToolProps): ToolInline {
   const title = webSearchProviderLabel(p.metadata.provider)
   return {
-    icon: "◈",
+    icon: sym("◈"),
     title: p.input.query ? `${title} "${p.input.query}"` : title,
   }
 }
@@ -428,7 +429,7 @@ function runWebSearch(p: ToolProps): ToolInline {
 function runTask(p: ToolProps): ToolInline {
   const kind = Locale.titlecase(p.input.agent || "unknown")
   const desc = p.input.description
-  const icon = p.frame.status === "error" ? "✗" : p.frame.status === "running" ? "•" : "✓"
+  const icon = p.frame.status === "error" ? sym("✗") : p.frame.status === "running" ? "•" : sym("✓")
   return {
     icon,
     title: desc || `${kind} Subagent`,
@@ -480,7 +481,7 @@ function runQuestion(p: ToolProps): ToolInline {
 
 function runInvalid(p: ToolProps): ToolInline {
   return {
-    icon: "✗",
+    icon: sym("✗"),
     title: "Invalid Tool",
     mode: "block",
     body: p.frame.status === "completed" ? p.frame.output : undefined,
@@ -859,7 +860,7 @@ function scrollSkillStart(p: ToolProps): string {
 
 function scrollGlobStart(p: ToolProps): string {
   const pattern = p.input.pattern ?? ""
-  const head = pattern ? `✱ Glob "${pattern}"` : "✱ Glob"
+  const head = pattern ? sym(`✱ Glob "${pattern}"`) : sym("✱ Glob")
   const dir = p.input.path ?? ""
   if (!dir) {
     return head
@@ -874,7 +875,7 @@ function scrollGlobFinal(p: ToolProps): string {
 
 function scrollGrepStart(p: ToolProps): string {
   const pattern = p.input.pattern ?? ""
-  const head = pattern ? `✱ Grep "${pattern}"` : "✱ Grep"
+  const head = pattern ? sym(`✱ Grep "${pattern}"`) : sym("✱ Grep")
   const dir = p.input.path ?? ""
   if (!dir) {
     return head
@@ -905,10 +906,10 @@ function scrollWebSearchStart(p: ToolProps): string {
   const title = webSearchProviderLabel(p.metadata.provider)
   const query = p.input.query ?? ""
   if (!query) {
-    return `◈ ${title}`
+    return sym(`◈ ${title}`)
   }
 
-  return `◈ ${title} "${query}"`
+  return sym(`◈ ${title} "${query}"`)
 }
 
 const TOOL_RULES = {

@@ -37,6 +37,9 @@ const DeviceError = Schema.Struct({
 })
 const decodeDeviceError = Schema.decodeUnknownOption(Schema.fromJsonString(DeviceError))
 
+// k1rothic: subscription logins are disabled; Mode A uses API keys only.
+const subscriptionLogins = false as boolean
+
 const device = (app: App.Info) =>
   ({
     integrationID: Integration.ID.make("xai"),
@@ -92,7 +95,7 @@ export const XAIPlugin = define({
       editor.update("xai", (integration) => {
         integration.name = "xAI"
       })
-      editor.method.update(device(ctx.app))
+      if (subscriptionLogins) editor.method.update(device(ctx.app))
       editor.method.update({ integrationID: "xai", method: { type: "key", label: "Manually enter API Key" } })
     })
     yield* ctx.provider.transform((providers) => {

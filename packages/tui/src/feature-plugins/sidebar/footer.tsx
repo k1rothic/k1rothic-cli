@@ -6,6 +6,7 @@ import { useWorkingDirectoryActions } from "../../ui/working-directory-actions"
 import { usePromptMove } from "../../component/prompt/move"
 import { hasConnectedProvider } from "../../util/connected-provider"
 
+import { sym } from "../../k1-glyphs"
 export function SidebarOnboarding(props: { context: Plugin.Context; sessionID: string }) {
   const dimensions = useTerminalDimensions()
   const [onboarding, updateOnboarding] = props.context.storage.store("getting-started", {
@@ -35,7 +36,7 @@ export function SidebarOnboarding(props: { context: Plugin.Context; sessionID: s
         gap={1}
       >
         <text flexShrink={0} fg={props.context.theme.text.base}>
-          ⬖
+          {sym("⬖")}
         </text>
         <box flexGrow={1} gap={1}>
           <box flexDirection="row" justifyContent="space-between">
@@ -51,7 +52,7 @@ export function SidebarOnboarding(props: { context: Plugin.Context; sessionID: s
                 }).catch((error) => console.error("Failed to dismiss sidebar onboarding", error))
               }}
             >
-              ✕
+              {sym("✕")}
             </text>
           </box>
           <text fg={props.context.theme.text.muted}>OpenCode includes free models so you can start immediately.</text>

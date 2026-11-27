@@ -17,6 +17,7 @@ import { SimulationSemantics } from "../../simulation/semantics"
 import { PatchDiff } from "../../component/patch-diff"
 import { useToast } from "../../ui/toast"
 
+import { sym } from "../../k1-glyphs"
 type PermissionStage = "permission" | "reject"
 
 function EditBody(props: { file?: string; diff?: string; patch?: string }) {
@@ -200,7 +201,7 @@ export function PermissionPrompt(props: { request: PermissionRequest; directory?
           const header = () => (
             <box flexDirection="column" gap={0}>
               <box flexDirection="row" gap={1} flexShrink={0}>
-                <text fg={theme.text.feedback.warning.base}>{"△"}</text>
+                <text fg={theme.text.feedback.warning.base}>{sym("△")}</text>
                 <text fg={theme.text.base}>Permission required</text>
               </box>
               <Show when={props.request.action !== "shell" && current.title}>
@@ -321,7 +322,7 @@ function RejectPrompt(props: {
     >
       <box gap={1} paddingLeft={1} paddingRight={3} paddingTop={1} paddingBottom={1}>
         <box flexDirection="row" gap={1} paddingLeft={1}>
-          <text fg={theme.text.feedback.error.base}>{"△"}</text>
+          <text fg={theme.text.feedback.error.base}>{sym("△")}</text>
           <text fg={theme.text.base}>Reject permission</text>
         </box>
         <box paddingLeft={1}>
@@ -527,7 +528,7 @@ export function SessionQuestion<const T extends Record<string, string>>(props: {
           when={props.header}
           fallback={
             <box flexDirection="row" gap={1} paddingLeft={1} flexShrink={0}>
-              <text fg={theme.text.feedback.warning.base}>{"△"}</text>
+              <text fg={theme.text.feedback.warning.base}>{sym("△")}</text>
               <text fg={theme.text.base}>{props.title}</text>
             </box>
           }
@@ -603,7 +604,7 @@ export function SessionQuestion<const T extends Record<string, string>>(props: {
           </Show>
           <Show when={keys.length > 1}>
             <text fg={theme.text.base}>
-              {"⇆"} <span style={{ fg: theme.text.muted }}>select</span>
+              {sym("⇆")} <span style={{ fg: theme.text.muted }}>select</span>
             </text>
           </Show>
           <text fg={theme.text.base}>

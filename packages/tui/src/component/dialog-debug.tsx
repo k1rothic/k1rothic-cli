@@ -10,6 +10,7 @@ import { describeOS, describeTerminal } from "../util/system"
 import { useTuiApp } from "../context/runtime"
 import { useNewDesigns } from "../config"
 
+import { sym } from "../k1-glyphs"
 export function DialogDebug() {
   const theme = useTheme()
   const dialog = useDialog()
@@ -54,7 +55,7 @@ export function DialogDebug() {
   }))
 
   const copyAction = () => ({
-    title: copied() ? "✓ copied" : "copy",
+    title: copied() ? sym("✓ copied") : "copy",
     key: newDesigns() ? "c" : "enter",
     color: copied() ? theme.text.feedback.success.base : undefined,
     onTrigger: copy,

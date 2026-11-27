@@ -2,6 +2,7 @@ import type { ColorInput } from "@opentui/core"
 import { RGBA } from "@opentui/core"
 import type { ColorGenerator } from "../component/spinner-renderable"
 
+import { sym } from "../k1-glyphs"
 interface AdvancedGradientOptions {
   colors: ColorInput[]
   trailLength: number
@@ -311,7 +312,7 @@ export function createFrames(options: KnightRiderOptions = {}): string[] {
       const index = calculateColorIndex(frameIndex, charIndex, width, trailOptions)
 
       if (style === "diamonds") {
-        const shapes = ["⬥", "◆", "⬩", "⬪"]
+        const shapes = [sym("⬥"), sym("◆"), sym("⬩"), sym("⬪")]
         if (index >= 0 && index < trailOptions.colors.length) {
           return shapes[Math.min(index, shapes.length - 1)]
         }
@@ -321,7 +322,7 @@ export function createFrames(options: KnightRiderOptions = {}): string[] {
       // Default to blocks
       // It's active if we have a valid color index that is within our colors array
       const isActive = index >= 0 && index < trailOptions.colors.length
-      return isActive ? "■" : "⬝"
+      return isActive ? "■" : sym("⬝")
     }).join("")
   })
 

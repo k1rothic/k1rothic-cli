@@ -18,6 +18,7 @@ import { DialogExperiments } from "./dialog-experiments"
 import { usePlugin } from "../plugin/context"
 import { errorMessage } from "../util/error"
 
+import { sym } from "../k1-glyphs"
 const graphWidth = 23
 const sampleIntervalMilliseconds = 2_000
 const sampleRetentionMilliseconds = 30_000
@@ -580,14 +581,14 @@ export function runtimeStatus(samples: readonly Readonly<{ delay: number; time: 
 
 export function statusIcon(status: RuntimeStatus) {
   if (status === "high") return "●"
-  if (status === "medium") return "⦿"
+  if (status === "medium") return sym("⦿")
   return "○"
 }
 
 export function connectionIndicator(status: "connected" | "connecting" | "reconnecting", attempt: number) {
-  if (status === "connected") return { state: "connected" as const, icon: "✓" }
+  if (status === "connected") return { state: "connected" as const, icon: sym("✓") }
   if (status === "reconnecting" && attempt >= 3) return { state: "disconnected" as const, icon: "×" }
-  return { state: "reconnecting" as const, icon: "↻" }
+  return { state: "reconnecting" as const, icon: sym("↻") }
 }
 
 export function brailleGraph(values: readonly number[], width = graphWidth) {

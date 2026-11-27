@@ -124,6 +124,38 @@ describe("ConfigPolicyPlugin.Plugin", () => {
     }),
   )
 
+  it.effect("k1rothic: offers only the default providers plus the user's own gateways", () =>
+    Effect.gen(function* () {
+      const catalog = yield* Provider.Service
+      yield* catalog.transform((catalog) => {
+        catalog.update(Provider.ID.anthropic, () => {})
+        catalog.update(Provider.ID.make("openrouter"), () => {})
+        catalog.update(Provider.ID.make("togetherai"), () => {})
+        catalog.update(Provider.ID.make("my-gw"), () => {})
+      })
+      yield* addPlugin([
+        new Document({
+          type: "document",
+          info: decode({ providers: { "my-gw": { package: "@opencode/ai/providers/openai-compatible" } } }),
+        }),
+      ])
+
+      expect(yield* catalog.get(Provider.ID.anthropic)).toBeDefined()
+      expect(yield* catalog.get(Provider.ID.make("openrouter"))).toBeDefined()
+      expect(yield* catalog.get(Provider.ID.make("my-gw"))).toBeDefined()
+      expect(yield* catalog.get(Provider.ID.make("togetherai"))).toBeUndefined()
+    }),
+  )
+
+  it.effect("k1rothic: a user provider choice replaces the default list", () =>
+    Effect.gen(function* () {
+      const catalog = yield* Provider.Service
+      yield* catalog.transform((catalog) => catalog.update(Provider.ID.make("togetherai"), () => {}))
+      yield* addPlugin([document(provider("allow", "togetherai"))])
+      expect(yield* catalog.get(Provider.ID.make("togetherai"))).toBeDefined()
+    }),
+  )
+
   it.effect("prevents project policy from overriding user-global policy", () =>
     Effect.gen(function* () {
       const catalog = yield* Provider.Service
@@ -318,13 +350,14 @@ describe("integration policy", () => {
 
       // Only the required organization's connection works, and with it everything that organization supplies.
       yield* credentials.create({ integrationID: Integration.ID.make("opencode"), value: consoleCredential(orgID) })
-      yield* waitUntil(available().pipe(Effect.map((ids) => ids.length > 0)))
-      expect(yield* available()).toEqual(["acme-gateway", "opencode"])
+      yield* waitUntil(searches().pipe(Effect.map((ids) => ids.length > 0)))
+      // The default provider allowlist hides `acme-gateway` and `opencode` unless the user configures them.
+      expect(yield* available()).toEqual([])
       expect(yield* searches()).toEqual(["opencode"])
 
       // Switching back to the personal account revokes it again.
       yield* credentials.activate(personal.id)
-      yield* waitUntil(available().pipe(Effect.map((ids) => ids.length === 0)))
+      yield* waitUntil(searches().pipe(Effect.map((ids) => ids.length === 0)))
       expect(yield* searches()).toEqual([])
     }).pipe(Effect.provide(Config.testLayer([lockdown()]))),
   )

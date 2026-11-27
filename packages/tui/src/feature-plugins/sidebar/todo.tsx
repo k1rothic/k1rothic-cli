@@ -3,6 +3,7 @@ import { createMemo, For, Show } from "solid-js"
 import { TodoItem } from "../../component/todo-item"
 import { sessionTodos } from "../../util/todo"
 
+import { sym } from "../../k1-glyphs"
 export function SidebarTodo(props: { context: Plugin.Context; sessionID: string }) {
   const [view, updateView] = props.context.storage.store("view", { initial: { open: true } })
   const theme = props.context.theme
@@ -30,7 +31,7 @@ export function SidebarTodo(props: { context: Plugin.Context; sessionID: string 
           }}
         >
           <Show when={list().length > 2}>
-            <text fg={theme.text.base}>{view.open ? "▼" : "▶"}</text>
+            <text fg={theme.text.base}>{view.open ? "▼" : sym("▶")}</text>
           </Show>
           <text fg={theme.text.base}>
             <b>Todo</b>

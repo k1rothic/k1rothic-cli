@@ -23,6 +23,7 @@ import { getScrollAcceleration } from "../util/scroll"
 import { useConfig, useCursorStyle, useNewDesigns } from "../config"
 import { moveSelection, reconcileSelection } from "./select-controller"
 
+import { sym } from "../k1-glyphs"
 export interface DialogSelectProps<T> {
   title: string
   titleView?: JSX.Element
@@ -869,14 +870,14 @@ export function DialogSelect<T>(props: DialogSelectProps<T>) {
 
 /**
  * Trailing value of a row that can be changed, under the "new-designs" experiment. The selected row shows how:
- * `‹ dark ›` cycles with ←/→, `opencode ↵` opens a picker. Other rows pad the value to the same width so it does
+ * `‹ dark ›` cycles with ←/→, `k1rothic ↵` opens a picker. Other rows pad the value to the same width so it does
  * not shift as the selection moves. Pass it with `footerOverhang: 2` so the value itself ends where plain footers do.
  */
 export function DialogSelectChoice(props: { value: string; active: boolean; open?: boolean }) {
   const theme = useTheme().surface("dialog")
   const text = () => {
     if (!props.active) return `  ${props.value}  `
-    return props.open ? `  ${props.value} ↵` : `‹ ${props.value} ›`
+    return props.open ? sym(`  ${props.value} ↵`) : `‹ ${props.value} ›`
   }
   return <span style={{ fg: props.active ? theme.text.action.primary.focused : theme.text.muted }}>{text()}</span>
 }
@@ -978,7 +979,7 @@ function DialogSelectRow(props: {
       <box flexDirection="row">
         {/* A row with its own background, like a destructive confirmation, draws its bar in that color. */}
         <text width={1} flexShrink={0} fg={props.activeBackground ?? theme.text.formfield.focused}>
-          {props.active ? "┃" : " "}
+          {props.active ? sym("┃") : " "}
         </text>
         {row()}
       </box>

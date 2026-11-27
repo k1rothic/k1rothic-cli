@@ -1,5 +1,5 @@
 import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
-import { RGBA, type Renderable } from "@opentui/core"
+import { type Renderable } from "@opentui/core"
 import { useRenderer, type JSX } from "@opentui/solid"
 import type { SessionMessageAssistantTool, SessionMessageInfo } from "@opencode/client"
 import { useTheme } from "../../context/theme"
@@ -14,6 +14,7 @@ import { InlineToolRow, ReasoningBody, reasoningContent, toolDisplay } from "./m
 import { use } from "./render-context"
 import { resolvePart } from "./rows"
 
+import { sym } from "../../k1-glyphs"
 type Renderers = {
   message: (messageID: string) => SessionMessageInfo | undefined
   entry: (entry: SessionEntry, images?: boolean) => JSX.Element
@@ -141,7 +142,7 @@ function GroupContent(props: GroupProps) {
           <Show when={grouped()} fallback={children("normal")}>
             <Show when={tools().length > 0}>
               <InlineToolRow
-                icon={completed() ? "→" : "✱"}
+                icon={completed() ? "→" : sym("✱")}
                 color={hover() ? theme.text.base : theme.text.muted}
                 complete={completed()}
                 pending={label()}
@@ -161,19 +162,8 @@ function GroupContent(props: GroupProps) {
         <Show when={thoughts().length > 0}>
           <Show when={grouped()} fallback={children("normal")}>
             <InlineToolRow
-              icon={expanded() ? "-" : "+"}
-              color={
-                !props.completed
-                  ? theme.text.base
-                  : hover() || expanded()
-                    ? theme.text.feedback.warning.base
-                    : RGBA.fromValues(
-                        theme.text.feedback.warning.base.r,
-                        theme.text.feedback.warning.base.g,
-                        theme.text.feedback.warning.base.b,
-                        0.6,
-                      )
-              }
+              icon={expanded() ? sym("◇") : sym("◆")}
+              color={!props.completed ? theme.text.base : hover() || expanded() ? theme.text.base : theme.text.muted}
               complete={props.completed}
               pending={latest() ? `Thinking: ${latest()}` : "Thinking"}
               spinner={!props.completed}
@@ -182,9 +172,8 @@ function GroupContent(props: GroupProps) {
               onMouseUp={toggle}
             >
               {props.completed ? "Thought" : latest() ? `Thinking: ${latest()}` : "Thinking"}
-              <Show when={props.completed && !expanded() && latest()}>: {latest()}</Show>
-              <Show when={props.completed && thoughts().length > 1}> · {thoughts().length} steps</Show>
-              <Show when={props.completed && duration()}> · {Locale.duration(duration())}</Show>
+              <Show when={props.completed && duration()}> for {Locale.duration(duration())}</Show>
+              <Show when={props.completed && expanded() && thoughts().length > 1}> · {thoughts().length} steps</Show>
             </InlineToolRow>
             <Show when={expanded()}>
               <box paddingLeft={3}>{children("thought")}</box>
@@ -246,7 +235,7 @@ function InstructionsGroup(props: GroupProps) {
   return (
     <GroupAnchor groupID={disclosure.id()} active={files() > 0}>
       <InlineToolRow
-        icon="◈"
+        icon={sym("◈")}
         color={hover() ? theme.text.base : theme.text.muted}
         complete={true}
         pending=""

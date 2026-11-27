@@ -36,6 +36,7 @@ import type { RunFooterTheme } from "./theme"
 import type { FormCancel, FormReply, MiniFormRequest } from "./types"
 import { stringWidth } from "../util/string-width"
 
+import { sym } from "../k1-glyphs"
 export function RunFormBody(props: {
   request: MiniFormRequest
   theme: RunFooterTheme
@@ -318,7 +319,7 @@ export function RunFormBody(props: {
     >
       <box height={1} flexDirection="row" gap={1} flexShrink={0} marginBottom={compact() ? 0 : 1}>
         <text fg={unsupported() ? props.theme.warning : props.theme.question} wrapMode="none" flexShrink={0}>
-          {props.mono ? "*" : "◆"}
+          {props.mono ? "*" : sym("◆")}
         </text>
         <text fg={props.theme.text} wrapMode="none" truncate minWidth={0}>
           {props.request.title}

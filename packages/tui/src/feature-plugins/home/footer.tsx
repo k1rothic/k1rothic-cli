@@ -4,6 +4,7 @@ import { useTerminalDimensions } from "@opentui/solid"
 import { usePlugin } from "../../plugin/context"
 import { Slot } from "../../plugin/render"
 
+import { sym } from "../../k1-glyphs"
 export function homeFooterVisibility(width: number) {
   return {
     mcpCommand: width >= 64,
@@ -25,7 +26,7 @@ function Mcp(props: { context: Plugin.Context }) {
         <text fg={props.context.theme.text.base}>
           <Switch>
             <Match when={failed()}>
-              <span style={{ fg: props.context.theme.text.feedback.error.base }}>⊙ </span>
+              <span style={{ fg: props.context.theme.text.feedback.error.base }}>{sym("⊙ ")}</span>
               {failed()} MCP failed
             </Match>
             <Match when={true}>
@@ -35,7 +36,7 @@ function Mcp(props: { context: Plugin.Context }) {
                     count() > 0 ? props.context.theme.text.feedback.success.base : props.context.theme.text.muted,
                 }}
               >
-                ⊙{" "}
+                {sym("⊙")}{" "}
               </span>
               {count()} MCP
             </Match>
@@ -63,7 +64,7 @@ function Plugins(props: { context: Plugin.Context }) {
     <Show when={failed()}>
       <box gap={1} flexDirection="row" flexShrink={0} onMouseUp={() => props.context.keymap.dispatch("plugins.list")}>
         <text fg={props.context.theme.text.base}>
-          <span style={{ fg: props.context.theme.text.feedback.error.base }}>⊙ </span>
+          <span style={{ fg: props.context.theme.text.feedback.error.base }}>{sym("⊙ ")}</span>
           {failed()} plugin{failed() === 1 ? "" : "s"} failed
         </text>
         <Show when={visibility().pluginCommand}>

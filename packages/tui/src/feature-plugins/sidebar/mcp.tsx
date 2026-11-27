@@ -2,6 +2,7 @@ import { Plugin } from "@opencode/plugin/tui"
 import { createMemo, For, Match, Show, Switch } from "solid-js"
 import { DialogMcp } from "../../component/dialog-mcp"
 
+import { sym } from "../../k1-glyphs"
 export function SidebarMcp(props: { context: Plugin.Context; sessionID: string }) {
   const [view, updateView] = props.context.storage.store("view", { initial: { open: true } })
   const theme = props.context.theme
@@ -34,7 +35,7 @@ export function SidebarMcp(props: { context: Plugin.Context; sessionID: string }
           }}
         >
           <Show when={list().length > 2}>
-            <text fg={theme.text.base}>{view.open ? "▼" : "▶"}</text>
+            <text fg={theme.text.base}>{view.open ? "▼" : sym("▶")}</text>
           </Show>
           <text fg={theme.text.base}>
             <b>MCP</b>

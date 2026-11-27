@@ -7,6 +7,7 @@ import "./spinner-renderable"
 import { SPINNER_FRAMES } from "./spinner-frames"
 import { ShimmerText } from "./shimmer-text"
 
+import { sym } from "../k1-glyphs"
 export { SPINNER_FRAMES } from "./spinner-frames"
 
 export function Spinner(props: { children?: JSX.Element; color?: RGBA; shimmer?: RGBA }) {
@@ -24,7 +25,7 @@ export function Spinner(props: { children?: JSX.Element; color?: RGBA; shimmer?:
   return (
     <Show
       when={config.animations ?? true}
-      fallback={<text fg={color()}>{props.children ? <>⋯ {props.children}</> : "⋯"}</text>}
+      fallback={<text fg={color()}>{props.children ? <>{sym("⋯ ")}{props.children}</> : sym("⋯")}</text>}
     >
       <Show
         when={props.shimmer}

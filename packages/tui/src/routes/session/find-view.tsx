@@ -22,6 +22,7 @@ import { useDialog } from "../../ui/dialog"
 import { displayRanges, findRanges, offsetRow, paintChunks, type FindPart, type FindRange } from "./find"
 import { use } from "./render-context"
 
+import { sym } from "../../k1-glyphs"
 export const FIND_MODE = "find"
 
 /**
@@ -72,7 +73,7 @@ export function FindBar(props: {
         width="100%"
         border={["left"]}
         borderColor={theme.border.base}
-        customBorderChars={{ ...SplitBorder.customBorderChars, bottomLeft: "╹" }}
+        customBorderChars={{ ...SplitBorder.customBorderChars, bottomLeft: sym("╹") }}
       >
         <box
           paddingLeft={dimensions().width < 44 ? 1 : 2}
@@ -113,7 +114,7 @@ export function FindBar(props: {
         height={1}
         border={["left"]}
         borderColor={theme.border.base}
-        customBorderChars={{ ...EmptyBorder, vertical: background().a !== 0 ? "╹" : " " }}
+        customBorderChars={{ ...EmptyBorder, vertical: background().a !== 0 ? sym("╹") : " " }}
       >
         <box
           height={1}

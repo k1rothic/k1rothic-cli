@@ -7,6 +7,7 @@ import { Locale } from "../util/locale"
 import { stringWidth } from "../util/string-width"
 import { moveSelection, moveSelectionOffset, reconcileSelection, revealSelectionOffset } from "../ui/select-controller"
 
+import { sym } from "../k1-glyphs"
 export const FOOTER_MENU_ROWS = 8
 export const FOOTER_COMPACT_WIDTH = 40
 
@@ -182,7 +183,7 @@ export function RunFooterMenu(props: {
         >
           {border() ? (
             <text fg={props.theme().border} wrapMode="none">
-              {props.mono ? "|" : "┃"}
+              {props.mono ? "|" : sym("┃")}
             </text>
           ) : undefined}
           <box

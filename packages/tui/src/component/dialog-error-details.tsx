@@ -14,6 +14,7 @@ import { FilePath } from "../ui/file-path"
 import { useToast } from "../ui/toast"
 import { errorDetails } from "../util/error-details"
 
+import { sym } from "../k1-glyphs"
 export function DialogErrorDetails(props: {
   title: string
   source?: string
@@ -64,7 +65,7 @@ export function DialogErrorDetails(props: {
   const actions = () => [
     { title: "investigate", key: "i", onTrigger: investigate },
     copied()
-      ? { title: "✓ copied", color: theme.text.feedback.success.base, onTrigger: copy }
+      ? { title: sym("✓ copied"), color: theme.text.feedback.success.base, onTrigger: copy }
       : { title: "copy details", key: "c", onTrigger: copy },
   ]
 

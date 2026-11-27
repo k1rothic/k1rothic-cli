@@ -39,10 +39,10 @@ export const Plugin = define({
       const project = discovery.project && FSUtil.contains(root, start)
       const stop = FSUtil.contains(home, start) ? home : root
       const globalFile = yield* fs.resolve(join(global.config, "AGENTS.md"))
-      // ~/.claude/CLAUDE.md stands in for the global AGENTS.md when it is missing.
-      const claudeGlobalFile = yield* fs.resolve(join(home, ".claude", "CLAUDE.md"))
+      // k1rothic: ~/.claude/CLAUDE.md is not read (the vendor CLI's home directory is off limits);
+      // project CLAUDE.md files still are.
       const names = InstructionDiscovery.filenames(discovery)
-      const globalFiles = discovery.claude ? [globalFile, claudeGlobalFile] : [globalFile]
+      const globalFiles = [globalFile]
       const loaded: { current: Loaded } = { current: { type: "available", files: [] } }
       const configured: { sources: string[]; remote: Map<string, InstructionDiscovery.File> } = {
         sources: [],

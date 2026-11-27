@@ -1,3 +1,4 @@
+import { sym } from "../k1-glyphs"
 export type SessionTab = {
   sessionID: string
   title?: string
@@ -18,7 +19,7 @@ export function sessionTabDetail(
   worktree: boolean,
 ) {
   const branch = worktree && current !== defaultBranch ? current : undefined
-  return branch && project ? `${project} ⎇ ${branch}` : (branch ?? project)
+  return branch && project ? sym(`${project} ⎇ ${branch}`) : (branch ?? project)
 }
 
 export type SessionTabHistory = {

@@ -5,6 +5,7 @@ import type {
 } from "@opencode/client"
 import { isRecord } from "./record"
 
+import { sym } from "../k1-glyphs"
 export type TodoStatus = "pending" | "in_progress" | "completed" | "cancelled"
 
 export type Todo = {
@@ -23,7 +24,7 @@ export function parseTodos(value: unknown): Todo[] {
 }
 
 export function todoMarker(status: TodoStatus, ascii = false) {
-  if (status === "completed") return ascii ? "[x]" : "[✓]"
+  if (status === "completed") return ascii ? "[x]" : sym("[✓]")
   if (status === "in_progress") return ascii ? "[>]" : "[•]"
   if (status === "cancelled") return "[-]"
   return "[ ]"

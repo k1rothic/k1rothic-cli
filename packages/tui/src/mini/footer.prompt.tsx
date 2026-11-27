@@ -68,6 +68,7 @@ import type {
 } from "./types"
 import { EmptyBorder } from "../ui/border"
 
+import { sym } from "../k1-glyphs"
 const AUTOCOMPLETE_ROWS = FOOTER_MENU_ROWS
 
 export const TEXTAREA_MIN_ROWS = 1
@@ -269,7 +270,7 @@ export function RunPromptBody(props: {
       <box
         border={["left"]}
         borderColor={props.rail()}
-        customBorderChars={{ ...EmptyBorder, vertical: props.mono ? "|" : "┃" }}
+        customBorderChars={{ ...EmptyBorder, vertical: props.mono ? "|" : sym("┃") }}
         paddingLeft={1}
         paddingRight={2}
         onSizeChange={props.onSizeChange}
@@ -529,7 +530,7 @@ export function createPromptState(input: PromptInput): PromptState {
         description: "compact older session context to free space",
       } satisfies SlashOption,
       ...EXIT_COMMANDS.map(
-        (name) => ({ kind: "slash", name, display: `/${name}`, description: "close OpenCode" }) satisfies SlashOption,
+        (name) => ({ kind: "slash", name, display: `/${name}`, description: "close k1rothic" }) satisfies SlashOption,
       ),
     ]
     const hidden = new Set(builtins.map((item) => item.name))

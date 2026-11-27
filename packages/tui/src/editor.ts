@@ -38,7 +38,12 @@ export async function openEditor(input: { value: string; renderer: CliRenderer; 
   }
 }
 
+// k1rothic: never read the vendor CLI's files. Claude Code's ~/.claude/ide/*.lock files carry an auth
+// token for its IDE bridge; using them would proxy the vendor's credentials, so discovery is off.
+const k1rothicVendorIDELocks = false as boolean
+
 export function discoverEditorConnection(directory: string) {
+  if (!k1rothicVendorIDELocks) return undefined
   const root = path.join(os.homedir(), ".claude", "ide")
   const contains = (parent: string) => {
     const resolved = path.resolve(parent)

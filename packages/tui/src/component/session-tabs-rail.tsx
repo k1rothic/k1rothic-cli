@@ -5,6 +5,7 @@ import { useTheme } from "../context/theme"
 import { tint } from "../theme/color"
 import type { SessionTabsController } from "./session-tabs"
 
+import { sym } from "../k1-glyphs"
 export function SessionTabsRailControls(props: {
   width: number
   tabs: SessionTabsController
@@ -48,7 +49,7 @@ export function SessionTabsRailControls(props: {
         onMouseDragEnd={() => (pressed = false)}
       >
         <text width={1} height={1} fg={theme.text.action.secondary.base} selectable={false} wrapMode="none">
-          ⌕
+          {sym("⌕")}
         </text>
       </box>
       <text

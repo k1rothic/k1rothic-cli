@@ -13,6 +13,7 @@ import { useSessionLinks } from "../../ui/session-link"
 import { useToast } from "../../ui/toast"
 import { getScrollAcceleration } from "../../util/scroll"
 
+import { sym } from "../../k1-glyphs"
 // session.generate exposes the session's tools but runs no tool loop, so a
 // tool call would surface as an empty answer.
 const instructions = [
@@ -144,7 +145,7 @@ export function Answer(props: {
         actions: {
           primary: [
             copied()
-              ? { title: "✓ copied", color: theme.text.feedback.success.base, onTrigger: copy }
+              ? { title: sym("✓ copied"), color: theme.text.feedback.success.base, onTrigger: copy }
               : { title: "copy response", key: "c", onTrigger: copy },
           ],
         },
@@ -154,7 +155,7 @@ export function Answer(props: {
           actions={{
             secondary: [
               copied()
-                ? { title: "✓ copied", color: theme.text.feedback.success.base, onTrigger: copy }
+                ? { title: sym("✓ copied"), color: theme.text.feedback.success.base, onTrigger: copy }
                 : { title: "copy", key: "c", onTrigger: copy },
               { title: "scroll", key: "j/k ↑/↓" },
             ],

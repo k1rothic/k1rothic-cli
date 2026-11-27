@@ -12,6 +12,7 @@ import { Wildcard } from "../../util/wildcard.js"
 import { WebSearch } from "../../websearch.js"
 import { ConfigIntegration } from "../integration.js"
 import { ConfigEntryObserver } from "./entry-observer.js"
+import { allowedByDefault } from "../../k1rothic-providers.js"
 
 export const Plugin = define({
   id: "opencode.config.policy",
@@ -72,6 +73,15 @@ export const Plugin = define({
         if (record.provider.activation === "enabled") denied.push(record.provider.id)
       }
       if (denied.length) runSync(Effect.logDebug("providers denied by policy", { providers: denied }))
+      // k1rothic: unless the user chooses providers themselves, offer only the default set plus the
+      // providers (custom gateways) defined in their config.
+      if (!statements.some((statement) => statement.action === "provider.use")) {
+        const configured = new Set(
+          loaded.entries.flatMap((entry) => (entry.type === "document" ? Object.keys(entry.info.providers ?? {}) : [])),
+        )
+        for (const record of providers.list())
+          if (!allowedByDefault(record.provider.id, configured)) providers.remove(record.provider.id)
+      }
     })
     // Every built-in web search provider shares its integration's ID.
     yield* websearch.transform((editor) => {

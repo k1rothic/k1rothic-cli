@@ -6,6 +6,7 @@ import { DialogSelect, DialogSelectChoice } from "./dialog-select"
 import { createStore } from "solid-js/store"
 import { createMemo, createSignal, For, Show } from "solid-js"
 
+import { sym } from "../k1-glyphs"
 export type ExportFormat = "markdown" | "json"
 export type ExportLocation = "project" | "temp"
 
@@ -243,7 +244,7 @@ function LegacyDialogExportOptions(props: DialogExportOptionsProps) {
                   onMouseUp={() => selectFormat(format)}
                 >
                   <text fg={markColor(store.active === format, store.format === format)}>
-                    {store.format === format ? "◉" : "○"}
+                    {store.format === format ? sym("◉") : "○"}
                   </text>
                   <text fg={labelColor(store.active === format)}>{format === "markdown" ? "Markdown" : "JSON"}</text>
                 </box>

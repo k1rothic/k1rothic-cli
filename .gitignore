@@ -11,6 +11,8 @@ playground
 tmp
 dist
 dist-node
+dist-ui
+dist-next
 ts-dist
 .turbo
 .typecheck-profiles

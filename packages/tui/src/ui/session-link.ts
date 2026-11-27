@@ -37,7 +37,7 @@ export function useSessionLinks() {
     const style = context.syntaxStyle.mergeStyles("markup.link.url")
     return spans.flatMap((span) => {
       // Like the web app, a code span links only when it is exactly a session ID, so a command such
-      // as `opencode --session ses_…` stays copyable.
+      // as `k1rothic --session ses_…` stays copyable.
       if (span.link || (span.code && !parseSessionMention(span.text.replace(/^`+\s?|\s?`+$/g, "")))) return [span]
       const mentions = sessionMentions(span.text)
       if (mentions.length === 0) return [span]

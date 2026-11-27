@@ -44,6 +44,7 @@ import { parseFileLineRange, stripFileLineRange } from "../../prompt/parse"
 import { moveSelection, reconcileSelectionWindow, revealSelectionOffset } from "../../ui/select-controller"
 import { directoryAutocomplete, slashArgumentAutocomplete } from "../../prompt/directory-completion"
 
+import { sym } from "../../k1-glyphs"
 export type AutocompleteRef = {
   onInput: (value: string) => void
   visible: false | "reference" | "command" | "directory"
@@ -996,7 +997,7 @@ function AutocompleteRail(props: { enabled: boolean; color?: RGBA; children: JSX
     <Show when={props.enabled} fallback={props.children}>
       <box flexDirection="row">
         <text width={1} flexShrink={0} fg={props.color ?? theme.border.base}>
-          ┃
+          {sym("┃")}
         </text>
         {props.children}
       </box>

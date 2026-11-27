@@ -7,6 +7,7 @@ import {
   decodePasteBytes,
   measureEditText,
   stripAnsiSequences,
+  TextAttributes,
   type KeyEvent,
 } from "@opentui/core"
 import { createEffect, createMemo, onMount, createSignal, onCleanup, on, Show, Switch, Match, For } from "solid-js"
@@ -15,7 +16,6 @@ import { useLocal } from "../../context/local"
 import { useTheme, useThemes } from "../../context/theme"
 import { tint } from "../../theme/color"
 import { createAnimatable, tween } from "../../ui/animation"
-import { EmptyBorder, SplitBorder } from "../../ui/border"
 import { useTuiPaths, useTuiTerminalEnvironment } from "../../context/runtime"
 import { useClipboard } from "../../context/clipboard"
 import { Spinner } from "../spinner"
@@ -42,7 +42,6 @@ import { type AutocompleteOption, type AutocompleteRef, Autocomplete } from "./a
 import { useRenderer, useTerminalDimensions } from "@opentui/solid"
 import { Locale } from "../../util/locale"
 import { errorMessage } from "../../util/error"
-import { createColors, createFrames } from "../../ui/spinner"
 import { useDialog } from "../../ui/dialog"
 import { DialogIntegration } from "../dialog-integration"
 import { useConnected } from "../use-connected"
@@ -70,9 +69,10 @@ import { useDirectoryRecents } from "../../prompt/directory-recents"
 import { directoryRecentValue } from "../../prompt/directory-completion"
 import { useWorkingDirectoryActions } from "../../ui/working-directory-actions"
 import { truncateFilePath } from "../../ui/file-path"
-import { PromptMetadataRow } from "./metadata"
+import { K1Status } from "../k1-chrome"
 import { limitLabel, useUsageLimits } from "../usage"
 
+import { roundedBorder, sym } from "../../k1-glyphs"
 export type PromptProps = {
   sessionID?: string
   visible?: boolean
@@ -320,7 +320,7 @@ export function Prompt(props: PromptProps) {
   function promptModelWarning() {
     toast.show({
       variant: "warning",
-      message: "Connect an integration to send prompts",
+      message: "Add a provider with /provider to send prompts",
       duration: 3000,
     })
     if (!connected()) {
@@ -1639,18 +1639,22 @@ export function Prompt(props: PromptProps) {
   const animateMetadata = !revealedPromptMetadata.has(local)
   const metadataAnimationsEnabled = () => animationsEnabled() && animateMetadata
   const agentMetaAlpha = createFadeIn(() => !!agentLabel(), metadataAnimationsEnabled)
-  const modelMetaAlpha = createFadeIn(
-    () => !!promptDisplay().agentLabel && store.mode === "normal",
-    metadataAnimationsEnabled,
-  )
-  const variantMetaAlpha = createFadeIn(
-    () => !!promptDisplay().agentLabel && store.mode === "normal" && !!promptDisplay().variant,
-    metadataAnimationsEnabled,
-  )
   createEffect(() => {
     if (agentLabel()) revealedPromptMetadata.add(local)
   })
   const borderHighlight = createMemo(() => tint(theme.border.base, highlight(), agentMetaAlpha()))
+  // k1rothic: the input box is a plain rounded box; shell mode tints it. Its bottom border carries
+  // "model (effort) · agent · approval", like the k1rothic design.
+  const k1Border = createMemo(() => (store.mode === "shell" ? borderHighlight() : theme.border.base))
+  const k1Label = createMemo(() => {
+    if (store.mode === "shell") return " shell "
+    const display = promptDisplay()
+    const model = display.variant ? `${display.modelLabel} (${display.variant})` : display.modelLabel
+    const approval = local.permission.mode === "autoaccept" ? "auto-approve" : "ask"
+    const parts = [model, agentLabel()?.toLowerCase(), approval].filter((part) => !!part)
+    const extra = limit()
+    return ` ${parts.join(" · ")}${extra ? ` · ${extra}` : ""} `
+  })
   const footerInput = () => ({
     sessionID: props.sessionID,
     mode: store.mode,
@@ -1697,50 +1701,25 @@ export function Prompt(props: PromptProps) {
     onMove: () => void move.open(),
   })
 
-  const spinnerDef = createMemo(() => {
-    const color = promptDisplay().agentColor ?? theme.border.base
-    return {
-      frames: createFrames({
-        color,
-        style: "blocks",
-        inactiveFactor: 0.6,
-        // enableFading: false,
-        minAlpha: 0.3,
-      }),
-      color: createColors({
-        color,
-        style: "blocks",
-        inactiveFactor: 0.6,
-        // enableFading: false,
-        minAlpha: 0.3,
-      }),
-    }
-  })
   const maxHeight = createMemo(() => Math.max(6, Math.floor(dimensions().height / 3)))
-
-  const promptBg = createMemo(() => theme.decrease(theme.background.raised.base))
 
   return (
     <>
       <box ref={(r: BoxRenderable) => (anchor = r)} visible={props.visible !== false} width="100%">
+        <Show when={props.sessionID && status() === "running"}>
+          <K1Status sessionID={props.sessionID!} onStop={() => void interrupt(props.sessionID!)} />
+          <box height={1} flexShrink={0} />
+        </Show>
         <box
           width="100%"
-          border={["left"]}
-          borderColor={borderHighlight()}
-          customBorderChars={{
-            ...SplitBorder.customBorderChars,
-            bottomLeft: "╹",
-          }}
+          border
+          borderStyle={roundedBorder()}
+          borderColor={k1Border()}
+          bottomTitle={k1Label()}
+          bottomTitleAlignment="right"
+          titleColor={theme.text.muted}
         >
-          <box
-            paddingLeft={dimensions().width < 44 ? 1 : 2}
-            paddingRight={dimensions().width < 44 ? 1 : 2}
-            paddingTop={1}
-            flexShrink={0}
-            backgroundColor={promptBg()}
-            flexGrow={1}
-            width="100%"
-          >
+          <box paddingLeft={1} paddingRight={1} flexShrink={0} flexGrow={1} width="100%">
             <Show when={config.prompt?.image_preview && visibleImageAttachments().length > 0}>
               <box
                 width="100%"
@@ -1809,8 +1788,12 @@ export function Prompt(props: PromptProps) {
                 </Show>
               </box>
             </Show>
+            <box flexDirection="row" width="100%">
+            <text fg={theme.text.base} attributes={TextAttributes.BOLD} flexShrink={0} selectable={false}>
+              {store.mode === "shell" ? "$ " : sym("❯ ")}
+            </text>
             <textarea
-              width="100%"
+              flexGrow={1}
               placeholder={placeholderText()}
               placeholderColor={theme.text.muted}
               textColor={muted() ? theme.text.muted : theme.text.base}
@@ -1902,56 +1885,20 @@ export function Prompt(props: PromptProps) {
               cursorColor={disabled() ? theme.background.raised.base : theme.text.base}
               syntaxStyle={syntax()}
             />
-            <box flexDirection="row" flexShrink={0} paddingTop={1} gap={1} justifyContent="space-between">
-              <PromptMetadataRow
-                mode={store.mode}
-                agent={agentLabel()}
-                auto={local.permission.mode === "autoaccept"}
-                model={promptDisplay().modelLabel}
-                provider={promptDisplay().providerLabel}
-                variant={promptDisplay().variant}
-                speed={promptDisplay().speed}
-                limit={limit()}
-                muted={!!muted()}
-                highlight={highlight()}
-                agentAlpha={agentMetaAlpha()}
-                modelAlpha={modelMetaAlpha()}
-                variantAlpha={variantMetaAlpha()}
-              />
             </box>
           </box>
         </box>
         <box
-          height={1}
-          border={["left"]}
-          borderColor={borderHighlight()}
-          customBorderChars={{
-            ...EmptyBorder,
-            vertical: promptBg().a !== 0 ? "╹" : " ",
-          }}
+          width="100%"
+          flexDirection="row"
+          justifyContent={props.sessionID ? "flex-start" : "space-between"}
+          gap={2}
+          paddingTop={1}
         >
-          <box
-            height={1}
-            border={["bottom"]}
-            borderColor={promptBg()}
-            customBorderChars={
-              promptBg().a !== 0
-                ? {
-                    ...EmptyBorder,
-                    horizontal: "▀",
-                  }
-                : {
-                    ...EmptyBorder,
-                    horizontal: " ",
-                  }
-            }
-          />
-        </box>
-        <box width="100%" flexDirection="row" justifyContent="space-between" gap={2}>
           <Slot path="prompt.footer" input={footerInput()}>
             <Slot path="prompt.footer.status" input={footerInput()}>
               <box
-                flexGrow={1}
+                flexGrow={props.sessionID ? 0 : 1}
                 flexShrink={1}
                 minWidth={0}
                 onSizeChange={function (this: BoxRenderable) {
@@ -1960,22 +1907,15 @@ export function Prompt(props: PromptProps) {
                 }}
               >
                 <Switch>
-                  <Match when={status() === "running"}>
-                    <box flexDirection="row" gap={1} flexGrow={1} justifyContent="flex-start">
-                      <box marginLeft={1}>
-                        <Show when={config.animations ?? true} fallback={<text fg={theme.text.muted}>[⋯]</text>}>
-                          <spinner color={spinnerDef().color} frames={spinnerDef().frames} interval={40} />
-                        </Show>
-                      </box>
-                      <PromptInterruptStatus
-                        armed={store.interrupt > 0}
-                        animations={animationsEnabled()}
-                        text={theme.text.base}
-                        subdued={theme.text.muted}
-                        warning={theme.text.feedback.warning.base}
-                        flash={theme.decrease(theme.text.feedback.warning.base, 2)}
-                      />
-                    </box>
+                  <Match when={status() === "running" && store.interrupt > 0}>
+                    <PromptInterruptStatus
+                      armed={store.interrupt > 0}
+                      animations={animationsEnabled()}
+                      text={theme.text.base}
+                      subdued={theme.text.muted}
+                      warning={theme.text.feedback.warning.base}
+                      flash={theme.decrease(theme.text.feedback.warning.base, 2)}
+                    />
                   </Match>
                   <Match when={move.progress()}>
                     {(progress) => (
@@ -1994,7 +1934,7 @@ export function Prompt(props: PromptProps) {
                       </text>
                     </box>
                   </Match>
-                  <Match when={true}>
+                  <Match when={!props.sessionID}>
                     <Show when={locationLabelDisplay()} fallback={<text />}>
                       {(location) => (
                         <text

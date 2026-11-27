@@ -12,6 +12,7 @@ import { DialogErrorDetails } from "./dialog-error-details"
 import { DialogIntegration } from "./dialog-integration"
 import { useLocation } from "../context/location"
 
+import { sym } from "../k1-glyphs"
 function statusError(status: McpServer["status"]) {
   if (status.status === "failed" || status.status === "needs_auth") return status.error
   return undefined
@@ -22,7 +23,7 @@ function Status(props: { status: McpServer["status"]; loading: boolean }) {
     return <>Connecting …</>
   }
   if (props.status.status === "connected") {
-    return <span style={{ attributes: TextAttributes.BOLD }}>Connected ✓</span>
+    return <span style={{ attributes: TextAttributes.BOLD }}>{sym("Connected ✓")}</span>
   }
   if (props.status.status === "failed") {
     return <>Failed !</>

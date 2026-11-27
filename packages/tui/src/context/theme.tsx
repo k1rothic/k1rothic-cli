@@ -121,7 +121,7 @@ type ThemeContextValue = {
 const [store, setStore] = createStore<State>({
   mode: "dark",
   lock: undefined,
-  active: "opencode",
+  active: "carbon",
   ready: false,
 })
 const [themeSources, setThemeSources] = createSignal(allThemes())
@@ -144,7 +144,7 @@ const themeContext = createSimpleContext({
         const mode = lock ?? renderer.themeMode ?? props.mode
         draft.mode = mode
         draft.lock = lock
-        draft.active = config.theme?.name || "opencode"
+        draft.active = config.theme?.name || "carbon"
         draft.ready = false
       }),
     )
@@ -153,7 +153,7 @@ const themeContext = createSimpleContext({
       on(
         () => config.theme?.name,
         (name) => {
-          const theme = name || "opencode"
+          const theme = name || "carbon"
           if (store.active === theme) return
           setStore("active", theme)
           if (theme === "system") refreshPalette()
@@ -177,7 +177,7 @@ const themeContext = createSimpleContext({
         .then((themes) => {
           setCustomThemes(themes)
         })
-        .catch(() => setStore("active", "opencode"))
+        .catch(() => setStore("active", "carbon"))
     }
 
     onMount(() => {

@@ -1,6 +1,7 @@
 import { Locale } from "./locale"
 import { canonicalToolName, finiteNumber, webSearchProviderLabel } from "./tool-display"
 
+import { sym } from "../k1-glyphs"
 type Dict = Record<string, unknown>
 
 export type PermissionPresentation = {
@@ -57,7 +58,7 @@ export function permissionPresentation(
     const pattern = text(input.pattern) || resources[0] || ""
     const title = action === "glob" ? "Glob" : "Grep"
     return {
-      icon: "✱",
+      icon: sym("✱"),
       title: `${title} "${pattern}"`,
       lines: pattern ? [`Pattern: ${pattern}`] : [],
     }
@@ -78,7 +79,7 @@ export function permissionPresentation(
     return {
       icon: "#",
       title: `${Locale.titlecase(agent)} Subagent`,
-      lines: description ? [`◉ ${description}`] : [],
+      lines: description ? [sym(`◉ ${description}`)] : [],
     }
   }
 
@@ -95,7 +96,7 @@ export function permissionPresentation(
     const query = text(input.query) || text(metadata.query)
     const title = webSearchProviderLabel(metadata.provider)
     return {
-      icon: "◈",
+      icon: sym("◈"),
       title: query ? `${title} "${query}"` : title,
       lines: query ? [`Query: ${query}`] : [],
     }
@@ -130,14 +131,14 @@ export function permissionPresentation(
 
   if (action === "doom_loop") {
     return {
-      icon: "⟳",
+      icon: sym("⟳"),
       title: "Continue after repeated failures",
       lines: ["This keeps the session running despite repeated failures."],
     }
   }
 
   return {
-    icon: "⚙",
+    icon: sym("⚙"),
     title: `Call tool ${source.action}`,
     lines: [`Tool: ${source.action}`],
   }

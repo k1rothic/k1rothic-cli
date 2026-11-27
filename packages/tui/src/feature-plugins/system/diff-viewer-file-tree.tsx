@@ -8,6 +8,7 @@ import { tint } from "../../theme/color"
 import { createEffect, createMemo, createSignal, For, Match, Show, Switch, type JSX } from "solid-js"
 import { buildFileTree, flattenFileTree, type FileTreeItem, type FileTreeRow } from "./diff-viewer-file-tree-utils"
 
+import { sym } from "../../k1-glyphs"
 const FILE_TREE_STATUS_WIDTH = 1
 
 export type DiffViewerFileTreeProps = {
@@ -145,7 +146,7 @@ export function DiffViewerFileTree(props: DiffViewerFileTreeProps) {
                     }
                     const marker = () => {
                       if (row.kind !== "directory") return "≡ "
-                      return props.expandedNodes && !props.expandedNodes.has(row.id) ? "▸ " : "▾ "
+                      return props.expandedNodes && !props.expandedNodes.has(row.id) ? sym("▸ ") : sym("▾ ")
                     }
                     // Rails run straight down from each ancestor folder; no end hooks.
                     const indent = createMemo(() => {
@@ -252,7 +253,7 @@ function scrollFileTreeRowIntoView(scroll: ScrollBoxRenderable | undefined, top:
 
 function fileTreeRowStatus(row: FileTreeRow, files: readonly FileTreeItem[], reviewed: boolean) {
   if (row.fileIndex === undefined) return ""
-  if (reviewed) return "✓"
+  if (reviewed) return sym("✓")
   const status = files[row.fileIndex]?.status
   return status === "modified" ? "M" : status === "added" ? "A" : status === "deleted" ? "D" : "?"
 }

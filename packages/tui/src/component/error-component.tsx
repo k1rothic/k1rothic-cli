@@ -7,6 +7,7 @@ import { useExit } from "../context/exit"
 import { useTuiApp } from "../context/runtime"
 import { describeOS, describeTerminal } from "../util/system"
 
+import { roundedBorder, sym } from "../k1-glyphs"
 export function ErrorComponent(props: { error: Error; reset: () => void; mode?: "dark" | "light" }) {
   const term = useTerminalDimensions()
   const exit = useExit()
@@ -55,7 +56,7 @@ export function ErrorComponent(props: { error: Error; reset: () => void; mode?: 
   const actions = [
     {
       key: "c",
-      label: () => ({ idle: "Copy report", copied: "✓ Copied", failed: "Copy failed" })[copyState()],
+      label: () => ({ idle: "Copy report", copied: sym("✓ Copied"), failed: "Copy failed" })[copyState()],
       copy: true,
       onUse: copyReport,
     },
@@ -128,7 +129,7 @@ export function ErrorComponent(props: { error: Error; reset: () => void; mode?: 
         <box
           flexShrink={0}
           border
-          borderStyle="rounded"
+          borderStyle={roundedBorder()}
           borderColor={colors.error}
           title=" Error "
           titleColor={colors.error}
@@ -182,7 +183,7 @@ export function ErrorComponent(props: { error: Error; reset: () => void; mode?: 
           flexBasis={0}
           minHeight={3}
           border
-          borderStyle="rounded"
+          borderStyle={roundedBorder()}
           borderColor={colors.borderSubtle}
           title=" Stack trace "
           titleColor={colors.muted}
@@ -229,7 +230,7 @@ function buildIssueURL(message: string, stack: string, version: string) {
   url.searchParams.set("terminal", describeTerminal())
   url.searchParams.set(
     "reproduce",
-    "Reported automatically from the OpenCode crash screen. If you can, describe what you were doing when it crashed.",
+    "Reported automatically from the k1rothic crash screen. If you can, describe what you were doing when it crashed.",
   )
 
   // Budget the stack against the fully URL-encoded length (not the raw length) so
@@ -238,7 +239,7 @@ function buildIssueURL(message: string, stack: string, version: string) {
   // so measuring url.toString() is both correct and safe on any input.
   const MAX_URL_LENGTH = 6000
   const marker = "\n… (truncated)"
-  const head = `The OpenCode TUI crashed with an unexpected error.\n\n**Error:** ${message}\n\n**Stack trace:**\n`
+  const head = `The k1rothic TUI crashed with an unexpected error.\n\n**Error:** ${message}\n\n**Stack trace:**\n`
   const setBody = (body: string) => url.searchParams.set("description", head + "```\n" + body + "\n```")
 
   setBody(stack)

@@ -10,7 +10,9 @@ import { Project } from "../project.js"
 import { AbsolutePath } from "../schema.js"
 import type { Options } from "../config.js"
 
-export const names = ["opencode.json", "opencode.jsonc"]
+// k1rothic.json(c) is the primary name; opencode.json(c) is still read for
+// compatibility. Later names win (candidates are searched reversed).
+export const names = ["opencode.json", "opencode.jsonc", "k1rothic.json", "k1rothic.jsonc"]
 
 /** Eligible sources in priority order, including paths that may appear later. */
 export interface Sources {
@@ -25,18 +27,18 @@ export interface Sources {
   readonly agents: readonly AbsolutePath[]
 }
 
-/** Platform system configuration directory (`/Library/Application Support/opencode`, `/etc/opencode`, `%ProgramData%\opencode`). */
+/** Platform system configuration directory (`/Library/Application Support/k1rothic`, `/etc/k1rothic`, `%ProgramData%\k1rothic`). */
 export function systemDirectory(platform: NodeJS.Platform = process.platform, env: NodeJS.ProcessEnv = process.env) {
-  if (platform === "darwin") return AbsolutePath.make("/Library/Application Support/opencode")
-  if (platform === "win32") return AbsolutePath.make(path.join(env.ProgramData || "C:\\ProgramData", "opencode"))
-  return AbsolutePath.make("/etc/opencode")
+  if (platform === "darwin") return AbsolutePath.make("/Library/Application Support/k1rothic")
+  if (platform === "win32") return AbsolutePath.make(path.join(env.ProgramData || "C:\\ProgramData", "k1rothic"))
+  return AbsolutePath.make("/etc/k1rothic")
 }
 
 /** macOS MDM managed preferences plists, most specific first; the first one present wins. */
 export function preferencePaths(user: string) {
   return [
-    AbsolutePath.make(path.join("/Library/Managed Preferences", user, "ai.opencode.managed.plist")),
-    AbsolutePath.make("/Library/Managed Preferences/ai.opencode.managed.plist"),
+    AbsolutePath.make(path.join("/Library/Managed Preferences", user, "ai.k1rothic.managed.plist")),
+    AbsolutePath.make("/Library/Managed Preferences/ai.k1rothic.managed.plist"),
   ]
 }
 
@@ -164,9 +166,12 @@ export const discover = Effect.fn("ConfigDiscovery.discover")(function* (options
       options?.claude === false
         ? []
         : [
+            // k1rothic: never read the vendor CLI's home directory (~/.claude holds its login);
+            // a project's own .claude directory is still used.
             ...new Set([
-              ...(globalEnabled ? [globalClaudeDirectory] : []),
-              ...visible.filter((item) => path.basename(item) === ".claude").toReversed(),
+              ...visible
+                .filter((item) => path.basename(item) === ".claude" && item !== globalClaudeDirectory)
+                .toReversed(),
             ]),
           ],
     agents: [

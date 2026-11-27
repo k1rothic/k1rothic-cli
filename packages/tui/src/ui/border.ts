@@ -1,3 +1,4 @@
+import { sym } from "../k1-glyphs"
 export const EmptyBorder = {
   topLeft: "",
   bottomLeft: "",
@@ -16,6 +17,6 @@ export const SplitBorder = {
   border: ["left" as const, "right" as const],
   customBorderChars: {
     ...EmptyBorder,
-    vertical: "┃",
+    vertical: sym("┃"),
   },
 }

@@ -31,6 +31,9 @@ import {
   DialogLayout,
   useDialog,
 } from "../ui/dialog"
+import { DialogGatewayName, DialogGateways } from "./dialog-gateway"
+import { listGateways } from "@opencode/core/k1rothic-gateways"
+import { Global } from "@opencode/util/global"
 import { DialogPrompt } from "../ui/dialog-prompt"
 import { DialogSelect } from "../ui/dialog-select"
 import { Link } from "../ui/link"
@@ -46,14 +49,19 @@ import {
   type FormAnswerField,
 } from "../util/form"
 
+import { sym } from "../k1-glyphs"
+// k1rothic: the default providers, in display order (see core/src/k1rothic-providers.ts).
 const INTEGRATION_PRIORITY: Record<string, number> = {
-  opencode: 0,
-  "opencode-go": 1,
-  openai: 2,
-  anthropic: 3,
-  "claude-agent": 4,
-  "github-copilot": 5,
-  google: 6,
+  anthropic: 0,
+  openai: 1,
+  openrouter: 2,
+  google: 3,
+  xai: 4,
+  deepseek: 5,
+  mistral: 6,
+  groq: 7,
+  ollama: 8,
+  lmstudio: 9,
 }
 
 type ConnectMethod = Exclude<IntegrationInfo["methods"][number], { type: "env" }>
@@ -117,6 +125,10 @@ export function DialogIntegration(
     ),
   )
 
+  // k1rothic: the user's custom gateways (custom providers in the global config).
+  const [gatewayIDs, setGatewayIDs] = createSignal<ReadonlySet<string>>(new Set())
+  void listGateways(Global.Path.config).then((list) => setGatewayIDs(new Set(list.map((item) => item.id))))
+
   createEffect(() => {
     if (!props.autoConnect) return
     const integration = integrations()[0]
@@ -130,11 +142,11 @@ export function DialogIntegration(
   })
 
   const options = createMemo(() => {
-    return integrations().map((integration) => {
+    const listed = integrations().map((integration) => {
       const methods = connectMethods(integration)
       const credentials = credentialConnections(integration)
-      let category = "Services"
-      if (integration.id in INTEGRATION_PRIORITY) category = "Popular"
+      let category = "Providers"
+      if (gatewayIDs().has(integration.id)) category = "Custom gateways"
       const status = integration.connections[0]?.status
       return {
         title: integration.name,
@@ -146,7 +158,7 @@ export function DialogIntegration(
         disabled: methods.length === 0 && credentials.length === 0,
         gutter:
           integration.connections.length > 0 && !status
-            ? () => <text fg={theme.text.feedback.success.base}>✓</text>
+            ? () => <text fg={theme.text.feedback.success.base}>{sym("✓")}</text>
             : undefined,
         onSelect: () => {
           if (credentials.length) return manageConnections(integration, methods, location, dialog, props.onConnected)
@@ -154,20 +166,51 @@ export function DialogIntegration(
         },
       }
     })
+    if (props.integrationID !== undefined) return listed
+    // k1rothic: add / manage custom API gateways.
+    return [
+      ...listed.toSorted((a, b) => Number(a.category === "Custom gateways") - Number(b.category === "Custom gateways")),
+      {
+        title: "+ Add custom gateway",
+        value: "k1rothic.gateway.add",
+        description: "OpenAI- or Anthropic-compatible server",
+        footer: undefined,
+        footerColor: undefined,
+        category: "Custom gateways",
+        disabled: false,
+        gutter: undefined,
+        onSelect: () => dialog.replace(() => <DialogGatewayName />),
+      },
+      ...(gatewayIDs().size
+        ? [
+            {
+              title: "Edit or delete gateways",
+              value: "k1rothic.gateway.manage",
+              description: undefined,
+              footer: undefined,
+              footerColor: undefined,
+              category: "Custom gateways",
+              disabled: false,
+              gutter: undefined,
+              onSelect: () => dialog.replace(() => <DialogGateways />),
+            },
+          ]
+        : []),
+    ]
   })
 
   return (
     <DialogSelect
-      title="Connect an integration"
+      title="Providers"
       options={options()}
       emptyView={
         <box paddingLeft={DIALOG_LIST_INSET} paddingRight={DIALOG_LIST_INSET}>
-          <text fg={theme.text.muted}>No integrations available</text>
+          <text fg={theme.text.muted}>No providers available</text>
         </box>
       }
       noMatchView={
         <box paddingLeft={DIALOG_LIST_INSET} paddingRight={DIALOG_LIST_INSET}>
-          <text fg={theme.text.muted}>No integrations found</text>
+          <text fg={theme.text.muted}>No providers found</text>
         </box>
       }
     />

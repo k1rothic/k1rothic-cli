@@ -81,7 +81,8 @@ const decodeSettings = Schema.decodeUnknownOption(Push.Settings)
 const decodeBell = Schema.decodeUnknownOption(Push.Bell)
 
 /** The production and dev notification relays, the only origins a phone's callback URL may be on. */
-export const relays = ["https://opencode-notify-relay.anomalyco.workers.dev", "https://notify.dev.opencode.ai"]
+// k1rothic: no phone push — opencode's relays are not used, so no callback URL is ever valid.
+export const relays: string[] = []
 
 // The token is base64url, the only characters the relay routes.
 const notifyPath = /^\/v2\/notify\/[A-Za-z0-9_-]+$/

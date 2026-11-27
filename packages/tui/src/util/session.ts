@@ -57,6 +57,8 @@ export function contextUsage(
   return {
     tokens,
     percent: model?.limit.context ? Math.round((tokens / model.limit.context) * 100) : undefined,
+    // k1rothic: the window size, for the "used / limit" meter in the top bar.
+    limit: model?.limit.context as number | undefined,
   }
 }
 

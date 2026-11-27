@@ -118,6 +118,8 @@ export const Definitions = {
   "session.tab.previous_unread": keybind("alt+shift+up", "Switch to previous unread session tab"),
   "session.tab.close": keybind("<leader>w", "Close current session tab"),
   "session.tab.reopen": keybind("ctrl+shift+t", "Reopen last closed session tab"),
+  // k1rothic: the tab row is hidden until toggled.
+  "session.tabs.toggle": keybind("alt+t", "Show or hide session tabs"),
   "session.timeline": keybind("<leader>g", "Show session timeline"),
   "session.find": keybind("<leader>f,super+f", "Find in session"),
   "session.fork": keybind("none", "Fork session from message"),

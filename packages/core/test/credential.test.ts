@@ -269,3 +269,48 @@ describe("Credential", () => {
     }),
   )
 })
+
+describe("Credential keychain (k1rothic)", () => {
+  it.effect("keeps secrets out of the database and moves old plaintext rows to the keychain", () =>
+    Effect.gen(function* () {
+      const credentials = yield* Credential.Service
+      const db = (yield* Database.Service).db
+      const integrationID = Integration.ID.make("anthropic")
+      const created = yield* credentials.create({
+        integrationID,
+        label: "Main",
+        value: Credential.Key.make({ type: "key", key: "sk-ant-secret" }),
+      })
+      const row = yield* db.select().from(CredentialTable).where(eq(CredentialTable.id, created.id)).get()
+      expect(JSON.stringify(row?.value)).not.toContain("sk-ant-secret")
+      expect((yield* credentials.get(created.id))?.value).toEqual({ type: "key", key: "sk-ant-secret" })
+
+      yield* credentials.update(created.id, { value: Credential.Key.make({ type: "key", key: "sk-ant-rotated" }) })
+      const updated = yield* db.select().from(CredentialTable).where(eq(CredentialTable.id, created.id)).get()
+      expect(JSON.stringify(updated?.value)).not.toContain("sk-ant-rotated")
+      expect((yield* credentials.get(created.id))?.value).toEqual({ type: "key", key: "sk-ant-rotated" })
+
+      // A row written by a version without the keychain still has its secret inline.
+      yield* db
+        .insert(CredentialTable)
+        .values({
+          id: Credential.ID.make("cred_plaintext"),
+          integration_id: integrationID,
+          label: "Old",
+          value: { type: "key", key: "sk-old-plain" },
+          active: false,
+        })
+        .run()
+      expect((yield* credentials.get(Credential.ID.make("cred_plaintext")))?.value).toEqual({
+        type: "key",
+        key: "sk-old-plain",
+      })
+      const migrated = yield* db
+        .select()
+        .from(CredentialTable)
+        .where(eq(CredentialTable.id, Credential.ID.make("cred_plaintext")))
+        .get()
+      expect(JSON.stringify(migrated?.value)).not.toContain("sk-old-plain")
+    }),
+  )
+})

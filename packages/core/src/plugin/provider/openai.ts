@@ -55,6 +55,9 @@ const Claims = Schema.fromJsonString(
 )
 const decodeClaims = Schema.decodeUnknownOption(Claims)
 
+// k1rothic: subscription logins are disabled; Mode A uses API keys only.
+const subscriptionLogins = false as boolean
+
 const browser = (app: App.Info) =>
   ({
     integrationID: Integration.ID.make("openai"),
@@ -257,8 +260,10 @@ export const OpenAIPlugin = define({
     })
 
     yield* ctx.integration.transform((editor) => {
-      editor.method.update(browser(ctx.app))
-      editor.method.update(headless(ctx.app))
+      if (subscriptionLogins) {
+        editor.method.update(browser(ctx.app))
+        editor.method.update(headless(ctx.app))
+      }
     })
     yield* load()
     // Temporary: the Codex list from models.dev, see openai-subscription-models.ts.

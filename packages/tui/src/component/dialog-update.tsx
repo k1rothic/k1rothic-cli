@@ -85,7 +85,7 @@ export function DialogUpdate(props: {
         <DialogHeader
           title={
             state().type === "installing"
-              ? "Updating OpenCode"
+              ? "Updating k1rothic"
               : state().type === "available" || state().type === "failed"
                 ? "Update available"
                 : "Update"
@@ -115,7 +115,7 @@ export function DialogUpdate(props: {
             </Match>
             <Match when={current.type === "installing"}>
               <Spinner shimmer={theme.text.base}>
-                {current.type === "installing" ? `Installing OpenCode ${current.version}…` : ""}
+                {current.type === "installing" ? `Installing k1rothic ${current.version}…` : ""}
               </Spinner>
             </Match>
             <Match when={current.type === "installed"}>

@@ -35,6 +35,7 @@ import { ErrorSummary } from "../util/error-summary.js"
 
 /** Client ID Metadata Document: servers that support CIMD accept this URL as the client_id without registration. */
 export const CLIENT_METADATA_URL = "https://opencode.ai/oauth/opencode/client.json"
+const k1rothicCIMD = false as boolean
 
 // The authorization server refused the refresh token or the client: only a new login helps.
 class RefreshRejected extends Data.TaggedError("McpOAuth.RefreshRejected")<{ readonly message: string }> {}
@@ -594,7 +595,10 @@ export const authorize = (input: {
         discover(input.config.url, { resourceMetadataUrl, fetchFn }),
       catch: (error) => (error instanceof Error ? error : new Error(String(error))),
     })
+    // k1rothic: never present opencode's hosted client metadata document; MCP logins
+    // use dynamic client registration (or a configured static client) instead.
     const cimd =
+      k1rothicCIMD &&
       !oauth?.client_id &&
       !oauth?.redirect_uri &&
       discovery.authorizationServerMetadata?.client_id_metadata_document_supported === true &&

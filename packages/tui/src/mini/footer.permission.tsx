@@ -34,6 +34,7 @@ import { transparent, type RunBlockTheme, type RunFooterTheme } from "./theme"
 import type { MiniPermissionRequest, PermissionReply } from "./types"
 import { PatchDiff } from "../component/patch-diff"
 
+import { sym } from "../k1-glyphs"
 function buttons(
   list: PermissionOption[],
   selected: PermissionOption,
@@ -111,7 +112,7 @@ export function RejectField(props: {
       minHeight={1}
       maxHeight={3}
       wrapMode="word"
-      placeholder="Tell OpenCode what to do differently"
+      placeholder="Tell k1rothic what to do differently"
       placeholderColor={props.theme.muted}
       textColor={props.theme.formfieldText}
       focusedTextColor={props.theme.formfieldFocusedText}
@@ -172,7 +173,7 @@ export function RunPermissionBody(props: {
   const hint = () =>
     compact() && width() < 56
       ? "pgup/pgdn scroll"
-      : `${props.mono ? "left/right" : "⇆"} select  enter confirm  esc ${stage() === "always" ? "cancel" : "reject"}`
+      : sym(`${props.mono ? "left/right" : "⇆"} select  enter confirm  esc ${stage() === "always" ? "cancel" : "reject"}`)
   const inlineControls = () => controlsWidth() + stringWidth(hint()) + 1 <= width() - (compact() ? 0 : 5)
   const title = createMemo(() => {
     if (stage() === "always") {
@@ -319,7 +320,7 @@ export function RunPermissionBody(props: {
         flexShrink={0}
       >
         <text height={1} fg={props.theme.text} wrapMode="none" truncate>
-          <span style={{ fg: props.theme.permission }}>{props.mono ? "! " : "△ "}</span>
+          <span style={{ fg: props.theme.permission }}>{props.mono ? "! " : sym("△ ")}</span>
           {title()}
         </text>
         <Show when={!compact() && stage() === "reject"}>
@@ -544,7 +545,7 @@ export function RunPermissionBody(props: {
                 when={compact() && width() < 56}
                 fallback={
                   <>
-                    {props.mono ? "left/right" : "⇆"}
+                    {props.mono ? "left/right" : sym("⇆")}
                     <span style={{ fg: props.theme.muted }}>{" select  "}</span>
                     enter<span style={{ fg: props.theme.muted }}>{" confirm  "}</span>
                     esc<span style={{ fg: props.theme.muted }}> {stage() === "always" ? "cancel" : "reject"}</span>

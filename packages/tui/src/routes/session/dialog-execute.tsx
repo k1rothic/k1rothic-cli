@@ -21,6 +21,7 @@ import { Locale } from "../../util/locale"
 import { getScrollAcceleration } from "../../util/scroll"
 import { formatExecuteOutput } from "@opencode/util/execute-output"
 
+import { sym } from "../../k1-glyphs"
 // The part is the live store object, so the dialog follows the tool while child
 // calls stream and the output arrives.
 export function DialogExecute(props: { part: SessionMessageAssistantTool }) {
@@ -99,10 +100,10 @@ export function DialogExecute(props: { part: SessionMessageAssistantTool }) {
 
   const copyActions = () => [
     copied() === "code"
-      ? { title: "✓ copied", color: theme.text.feedback.success.base, onTrigger: () => copy("code") }
+      ? { title: sym("✓ copied"), color: theme.text.feedback.success.base, onTrigger: () => copy("code") }
       : { title: "copy code", key: "c", onTrigger: () => copy("code") },
     copied() === "output"
-      ? { title: "✓ copied", color: theme.text.feedback.success.base, onTrigger: () => copy("output") }
+      ? { title: sym("✓ copied"), color: theme.text.feedback.success.base, onTrigger: () => copy("output") }
       : { title: "copy output", key: "o", onTrigger: () => copy("output") },
   ]
 
