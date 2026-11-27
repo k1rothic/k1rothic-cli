@@ -1,0 +1,8 @@
+/dist/
+/k1rothic
+/k1rothic.exe
+/k1rothic-test*
+*.test
+*.out
+coverage.*
+.DS_Store

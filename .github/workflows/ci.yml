@@ -1,0 +1,73 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, go ${{ matrix.go }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        go: ["1.26.x", "stable"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go }}
+      - name: vet
+        run: go vet ./...
+      - name: test (race)
+        if: runner.os != 'Windows'
+        run: go test -race -count=1 ./...
+      - name: test
+        if: runner.os == 'Windows'
+        run: go test -count=1 ./...
+      - name: build
+        run: go build -o k1rothic-test ./cmd/k1rothic
+
+  cross-build:
+    name: cross-build (static, CGO_ENABLED=0)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - darwin/amd64
+          - darwin/arm64
+          - linux/amd64
+          - linux/arm64
+          - windows/amd64
+          - windows/arm64
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.x"
+      - name: build ${{ matrix.target }}
+        run: |
+          export GOOS="${TARGET%/*}" GOARCH="${TARGET#*/}"
+          go build -trimpath -ldflags "-s -w" -o /tmp/k1rothic ./cmd/k1rothic
+          go vet ./...
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          CGO_ENABLED: "0"
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.x"
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          # Must be built with a Go >= the module's go directive; pin once stable.
+          version: latest
